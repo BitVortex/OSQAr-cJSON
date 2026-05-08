@@ -1,9 +1,9 @@
 # OSQAr-cJSON — ISO 26262 ASIL D SEooC Qualification
 
 [![CI](https://github.com/BitVortex/OSQAr-cJSON/actions/workflows/ci.yml/badge.svg)](https://github.com/BitVortex/OSQAr-cJSON/actions/workflows/ci.yml)
-[![OSQAr](https://img.shields.io/badge/OSQAr-v0.7.0-blue)](https://github.com/BitVortex/OSQAr/releases/tag/v0.7.0)
+[![OSQAr](https://img.shields.io/badge/OSQAr-v0.7.1-blue)](https://github.com/BitVortex/OSQAr/releases/tag/v0.7.1)
 [![cJSON](https://img.shields.io/badge/cJSON-v1.7.19-green)](https://github.com/DaveGamble/cJSON/releases/tag/v1.7.19)
-[![Release](https://img.shields.io/badge/release-1.7.19--0.7.0-orange)](https://github.com/BitVortex/OSQAr-cJSON/releases/tag/1.7.19-0.7.0)
+[![Release](https://img.shields.io/badge/release-1.7.19--0.7.1-orange)](https://github.com/BitVortex/OSQAr-cJSON/releases/tag/1.7.19-0.7.1)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-brightgreen)](https://bitvortex.github.io/OSQAr-cJSON/)
 
 > ⚠️ **RESEARCH REPOSITORY — NO WARRANTY**  
@@ -17,12 +17,12 @@ cJSON v1.7.19 qualified as an ISO 26262 ASIL D Safety Element out of Context (SE
 
 | Component | Repository | Pinned Version |
 |-----------|-----------|---------------|
-| **OSQAr** | [BitVortex/OSQAr](https://github.com/BitVortex/OSQAr) | [`v0.7.0`](https://github.com/BitVortex/OSQAr/releases/tag/v0.7.0) |
+| **OSQAr** | [BitVortex/OSQAr](https://github.com/BitVortex/OSQAr) | [`v0.7.1`](https://github.com/BitVortex/OSQAr/releases/tag/v0.7.1) |
 | **cJSON** | [DaveGamble/cJSON](https://github.com/DaveGamble/cJSON) | [`v1.7.19`](https://github.com/DaveGamble/cJSON/releases/tag/v1.7.19) |
 
 ## Releases
 
-Tagged releases follow the format **`cjson_version-osqar_version`** (e.g., `1.7.19-0.7.0`). Each release is a CI-generated auditable shipment containing:
+Tagged releases follow the format **`cjson_version-osqar_version`** (e.g., `1.7.19-0.7.1`). Each release is a CI-generated auditable shipment containing:
 
 | Asset | Description |
 |-------|------------|
@@ -113,4 +113,4 @@ osqar traceability _build/html/needs.json \
 | 13 | RFC conformance (independent validator) | [#9](https://github.com/BitVortex/OSQAr-cJSON/issues/9) |
 | 14 | Reproducible build verification | [#10](https://github.com/BitVortex/OSQAr-cJSON/issues/10) |
 
-Gaps are documented with structured status/reason/mitigation in `osqar_project.json` → `verification.gaps` (OSQAr v0.7.0 feature) and rendered in the Sphinx HTML documentation per ISO 26262-8 §11.4.8.
+Gaps are documented with structured status/reason/mitigation in `osqar_project.json` → `verification.gaps` (OSQAr v0.7.1 feature) and rendered in the Sphinx HTML documentation per ISO 26262-8 §11.4.8.

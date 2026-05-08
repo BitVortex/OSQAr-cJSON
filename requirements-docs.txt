@@ -4,4 +4,4 @@ sphinx-test-reports>=1.0
 sphinxcontrib-plantuml>=0.25
 furo>=2024.8.6
 # OSQAr pinned version for reproducible qualification
-osqar==0.7.0
+osqar==0.7.1

@@ -33,7 +33,7 @@ jobs:
           python3 -m pip install -r requirements-docs.txt
 
       - name: Install OSQAr CLI (pinned)
-        run: python3 -m pip install osqar==0.7.0
+        run: python3 -m pip install osqar==0.7.1
 
       - name: Build and test cJSON (qualification pipeline)
         run: |
@@ -144,7 +144,7 @@ jobs:
           body: |
             ## cJSON ${{ github.ref_name }} — ISO 26262 ASIL D SEooC Qualification
 
-            Qualified using [OSQAr](https://github.com/BitVortex/OSQAr) v0.7.0.
+            Qualified using [OSQAr](https://github.com/BitVortex/OSQAr) v0.7.1.
 
             **Shipment contents:**
             - Sphinx HTML documentation with full traceability (requirements ↔ architecture ↔ verification)

@@ -36,7 +36,7 @@ Project Metadata
 
 - **Library:** cJSON v1.7.19 (ANSI C, single-header JSON parser)
 - **Source:** https://github.com/DaveGamble/cJSON
-- **Qualification Framework:** OSQAr v0.7.0
+- **Qualification Framework:** OSQAr v0.7.1
 - **Safety Standard:** ISO 26262:2018 / 26262-10:2025 (SEooC)
 - **ASIL Target:** D
 - **Assumptions of Use:** Defined in Lifecycle Management (06_lifecycle_management.rst)
