@@ -252,18 +252,18 @@ run_coverage() {
     # Extract real coverage numbers — use raw gcov output (more reliable
     # than gcovr which has path resolution issues with test binary .gcno files)
     if [ -f "cJSON.c.gcov" ]; then
-        # Lines executed count: lines starting with a number (not #####, not -)
-        cjson_exec=$(grep -cP '^\s+\d+:' cJSON.c.gcov 2>/dev/null || echo 0)
-        cjson_total=$(grep -cP '^\s+(?:\d+|#####):' cJSON.c.gcov 2>/dev/null || echo 0)
+        cjson_exec=$(grep -cE '^[[:space:]]+[0-9]+:' cJSON.c.gcov 2>/dev/null || true)
+        cjson_total=$(grep -cE '^[[:space:]]+([0-9]+|#####):' cJSON.c.gcov 2>/dev/null || true)
     else
         cjson_exec=0; cjson_total=0
     fi
     if [ -f "cJSON_Utils.c.gcov" ]; then
-        utils_exec=$(grep -cP '^\s+\d+:' cJSON_Utils.c.gcov 2>/dev/null || echo 0)
-        utils_total=$(grep -cP '^\s+(?:\d+|#####):' cJSON_Utils.c.gcov 2>/dev/null || echo 0)
+        utils_exec=$(grep -cE '^[[:space:]]+[0-9]+:' cJSON_Utils.c.gcov 2>/dev/null || true)
+        utils_total=$(grep -cE '^[[:space:]]+([0-9]+|#####):' cJSON_Utils.c.gcov 2>/dev/null || true)
     else
         utils_exec=0; utils_total=0
     fi
+    # Ensure values are clean integers (no newlines, no empty strings)
     stmt_hit=$((cjson_exec + utils_exec))
     stmt_total=$((cjson_total + utils_total))
     if [ "${stmt_total}" -gt 0 ]; then
