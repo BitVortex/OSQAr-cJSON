@@ -303,8 +303,8 @@ run_coverage() {
 
     # Build coverage report from gcovr data
     cat > "${SCRIPT_DIR}/coverage_report.txt" <<REPORT
-Coverage Report (gcov)
-======================
+Coverage Report (lcov / gcov)
+=============================
 
 Measurement obtained by instrumenting cJSON with --coverage,
 running the full Unity test suite (${#UNITY_TESTS[@]} core + ${#UNITY_UTILS_TESTS[@]} utils test executables),
