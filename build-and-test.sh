@@ -258,10 +258,12 @@ run_coverage() {
             --ignore-errors source 2>&1 || true
         lcov --summary "${OUT_DIR}/coverage_filtered.info" \
             > "${OUT_DIR}/lcov_summary.txt" 2>&1 || true
-        # Parse: "lines......: 81.2% (1234 of 1519 lines)"
+        # Parse lcov summary (disable set -e during parsing — grep may find no matches)
+        set +e
         stmt_pct=$(grep -oP 'lines[.\s]*:\s*\K[\d.]+(?=%)' "${OUT_DIR}/lcov_summary.txt" 2>/dev/null | head -1)
         stmt_hit=$(grep -oP 'lines[.\s]*:.*\(\K\d+' "${OUT_DIR}/lcov_summary.txt" 2>/dev/null | head -1)
         stmt_total=$(grep -oP 'lines[.\s]*:.*of \K\d+' "${OUT_DIR}/lcov_summary.txt" 2>/dev/null | head -1)
+        set -e
         [ -z "${stmt_pct}" ] && stmt_pct="N/A"
         [ -z "${stmt_hit}" ] && stmt_hit="0"
         [ -z "${stmt_total}" ] && stmt_total="0"
@@ -278,6 +280,7 @@ run_coverage() {
         for gcno in "${CJSON_DIR}/build/"*-*.gcno; do
             [ -f "$gcno" ] && gcov -b -o "${CJSON_DIR}/build" "$gcno" >/dev/null 2>&1 || true
         done
+        set +e
         if [ -f "cJSON.c.gcov" ]; then
             cjson_exec=$(grep -cE '^[[:space:]]+[0-9]+:' cJSON.c.gcov 2>/dev/null || true)
             cjson_total=$(grep -cE '^[[:space:]]+([0-9]+|#####):' cJSON.c.gcov 2>/dev/null || true)
@@ -290,6 +293,7 @@ run_coverage() {
         else
             utils_exec=0; utils_total=0
         fi
+        set -e
         stmt_hit=$((cjson_exec + utils_exec))
         stmt_total=$((cjson_total + utils_total))
         if [ "${stmt_total}" -gt 0 ]; then
