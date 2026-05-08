@@ -251,6 +251,8 @@ run_coverage() {
     # Extract real coverage numbers via gcovr
     if command -v gcovr &>/dev/null; then
         gcovr -r "${CJSON_DIR}" --object-directory="${CJSON_DIR}/build" \
+            --filter 'cJSON.*\.c$' \
+            --gcov-ignore-errors=no_working_dir_found \
             --print-summary > "${OUT_DIR}/gcovr_summary.txt" 2>&1 || true
 
         # Parse gcovr summary (gcovr 5.x-7.x format: "lines: 92.4% (2948 out of 3191)")
