@@ -208,8 +208,8 @@
 <li class="toctree-l1"><a class="reference internal" href="03_verification.html">Verification — cJSON Qualification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="04_implementation.html">Implementation — cJSON Qualification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="05_test_results.html">Test Results — cJSON Qualification</a></li>
-<li class="toctree-l1"><a class="reference internal" href="05_test_results.html#coverage-report">Coverage report</a></li>
-<li class="toctree-l1"><a class="reference internal" href="05_test_results.html#complexity-report-lizard">Complexity Report (lizard)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_test_results.html#coverage-report-gcov">Coverage Report (gcov)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_test_results.html#complexity-report-lizard-mccabe">Complexity Report (lizard / McCabe)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="06_lifecycle_management.html">Lifecycle Management — cJSON Qualification</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Traceability</span></p>
@@ -253,7 +253,17 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="osqar-qualification-cjson-v1-7-19-seooc-iso-26262-asil-d">
+          <div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p><strong>RESEARCH ARTIFACT — NO WARRANTY</strong></p>
+<p>This is an <strong>active research repository</strong> for agentic qualification of
+open-source software for cyber-physical systems. All artifacts herein
+are produced by autonomous AI agents. <strong>Information may be inconsistent,
+outdated, incomplete, or just plain wrong.</strong> No warranty is provided and
+no liability is assumed. Do not use in production safety systems without
+independent expert review.</p>
+</div>
+<section id="osqar-qualification-cjson-v1-7-19-seooc-iso-26262-asil-d">
 <h1>OSQAr Qualification — cJSON v1.7.19 SEooC (ISO 26262 ASIL D)<a class="headerlink" href="#osqar-qualification-cjson-v1-7-19-seooc-iso-26262-asil-d" title="Link to this heading">¶</a></h1>
 <p><strong>Case Study:</strong> Application of the OSQAr Qualification Architecture to cJSON as an ISO 26262 ASIL D Safety Element out of Context.</p>
 <div class="toctree-wrapper compound">
@@ -261,7 +271,9 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="01_requirements.html">Requirements — cJSON Qualification (ISO 26262 ASIL D SEooC)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="02_architecture.html">Architecture — cJSON Qualification</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="02_architecture.html#component-architecture-textual">Component Architecture (textual)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02_architecture.html#component-architecture-plantuml">Component Architecture (PlantUML)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02_architecture.html#parser-flow-plantuml">Parser Flow (PlantUML)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02_architecture.html#data-model-plantuml">Data Model (PlantUML)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="02_architecture.html#safety-architecture-freedom-from-interference">Safety Architecture — Freedom from Interference</a></li>
 </ul>
 </li>
@@ -274,11 +286,11 @@
 <li class="toctree-l2"><a class="reference internal" href="05_test_results.html#coverage-summary">Coverage Summary</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="05_test_results.html#coverage-report">Coverage report</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="05_test_results.html#coverage-report-gcov">Coverage Report (gcov)</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="05_test_results.html#static-analysis-summary">Static Analysis Summary</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="05_test_results.html#complexity-report-lizard">Complexity Report (lizard)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_test_results.html#complexity-report-lizard-mccabe">Complexity Report (lizard / McCabe)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="06_lifecycle_management.html">Lifecycle Management — cJSON Qualification</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="06_lifecycle_management.html#assumptions-of-use-aou">Assumptions of Use (AoU)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="06_lifecycle_management.html#configuration-management">Configuration Management</a></li>
@@ -299,7 +311,7 @@
 <ul class="simple">
 <li><p><strong>Library:</strong> cJSON v1.7.19 (ANSI C, single-header JSON parser)</p></li>
 <li><p><strong>Source:</strong> <a class="reference external" href="https://github.com/DaveGamble/cJSON">https://github.com/DaveGamble/cJSON</a></p></li>
-<li><p><strong>Qualification Framework:</strong> OSQAr v0.6.0</p></li>
+<li><p><strong>Qualification Framework:</strong> OSQAr v0.7.0</p></li>
 <li><p><strong>Safety Standard:</strong> ISO 26262:2018 / 26262-10:2025 (SEooC)</p></li>
 <li><p><strong>ASIL Target:</strong> D</p></li>
 <li><p><strong>Assumptions of Use:</strong> Defined in Lifecycle Management (06_lifecycle_management.rst)</p></li>
@@ -309,12 +321,12 @@
 <h2>Qualification Summary<a class="headerlink" href="#qualification-summary" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><strong>Requirements:</strong> 12 safety requirements defined (REQ_CJSON_*)</p></li>
-<li><p><strong>Architecture:</strong> 6 architectural elements with PlantUML diagrams</p></li>
-<li><p><strong>Verification:</strong> 13 verification activities planned and executed</p></li>
+<li><p><strong>Architecture:</strong> 7 architectural elements with PlantUML diagrams</p></li>
+<li><p><strong>Verification:</strong> 14 verification activities planned and executed</p></li>
 <li><p><strong>Implementation:</strong> 5,066 LOC in 4 translation units, 78 public API functions</p></li>
 <li><p><strong>Test Suite:</strong> 1,000+ unit tests covering parser, printer, and utilities</p></li>
 <li><p><strong>Static Analysis:</strong> cppcheck + compiler warning audit</p></li>
-<li><p><strong>Dynamic Analysis:</strong> ASan, UBSan (runtime), Valgrind (memory)</p></li>
+<li><p><strong>Dynamic Analysis:</strong> ASan, UBSan (runtime), Valgrind (planned)</p></li>
 <li><p><strong>Traceability:</strong> Full bidirectional trace via sphinx-needs (requirements ↔ architecture ↔ verification)</p></li>
 </ul>
 </section>

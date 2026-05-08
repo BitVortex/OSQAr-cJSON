@@ -18,6 +18,16 @@ _build/html/.buildinfo
 *.fls
 *.synctex.gz *.lof *.lot *.nav *.snm *.vrb *.run.xml *.bcf
 
+# cJSON build artifacts (submodule)
+cjson-source/build/
+cjson-source/*.o
+cjson-source/*.gcno
+cjson-source/*.gcda
+cjson-source/*.gcov
+
+# Build evidence (generated, not committed — CI produces fresh)
+_build/evidence/
+
 # Editor temp
 *.swp
 *.swo

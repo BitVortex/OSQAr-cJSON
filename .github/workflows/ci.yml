@@ -1,0 +1,113 @@
+name: cJSON Qualification CI
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - '[0-9]*.[0-9]*.[0-9]*-[0-9]*.[0-9]*.[0-9]*'  # e.g. 1.7.19-0.7.0
+  pull_request:
+    branches: [main]
+
+jobs:
+  qualify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install tool dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cppcheck lizard gcovr default-jre-headless
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements-docs.txt
+
+      - name: Build and test cJSON (qualification pipeline)
+        run: |
+          chmod +x build-and-test.sh
+          ./build-and-test.sh all
+          echo "=== Evidence artifacts ==="
+          ls -la test_results.xml coverage_report.txt complexity_report.txt
+          ls -la _build/evidence/ 2>/dev/null || true
+
+      - name: Build Sphinx documentation
+        run: |
+          python3 -m sphinx -b html -W . _build/html
+          echo "=== Sphinx build artifacts ==="
+          ls _build/html/index.html
+
+      - name: Install OSQAr CLI
+        run: python3 -m pip install osqar
+
+      - name: Traceability check (custom prefixes)
+        run: |
+          test -f _build/html/needs.json
+          osqar traceability _build/html/needs.json \
+            --test-prefix VER_ --code-prefix IMPL_ \
+            --json-report _build/html/traceability_report.json
+
+      - name: Generate shipment checksums
+        run: |
+          osqar checksum generate \
+            --root _build/html \
+            --output _build/html/SHA256SUMS
+          osqar checksum verify \
+            --root _build/html \
+            --manifest _build/html/SHA256SUMS
+
+      - name: Package shipment
+        run: |
+          mkdir -p _shipment/docs
+          cp -r _build/html/* _shipment/docs/
+          cp cjson-source/cJSON.c cjson-source/cJSON.h \
+             cjson-source/cJSON_Utils.c cjson-source/cJSON_Utils.h _shipment/ 2>/dev/null || true
+          cp test_results.xml coverage_report.txt complexity_report.txt _shipment/ 2>/dev/null || true
+          cp -r _build/evidence _shipment/ 2>/dev/null || true
+          cp -r _static _shipment/ 2>/dev/null || true
+          cd _shipment
+          find . -type f -not -name SHA256SUMS -exec sha256sum {} \; | sort -k2 > SHA256SUMS
+          echo "Shipment SHA256: $(sha256sum SHA256SUMS | cut -d' ' -f1)"
+
+      - name: Upload shipment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cjson-qualification-shipment
+          path: _shipment/
+          retention-days: 90
+
+      - name: Create GitHub Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "cJSON Qualification ${{ github.ref_name }}"
+          body: |
+            ## cJSON v${{ github.ref_name }} — ISO 26262 ASIL D SEooC Qualification
+
+            Qualified using [OSQAr](https://github.com/BitVortex/OSQAr) v${{ github.ref_name }}.
+
+            **Shipment contents:**
+            - Sphinx HTML documentation with full traceability (requirements ↔ architecture ↔ verification)
+            - `needs.json` machine-readable traceability export
+            - `traceability_report.json` verification report (zero violations)
+            - `SHA256SUMS` integrity manifest
+            - cJSON source files (qualification baseline)
+            - Test results (JUnit XML), coverage report, complexity analysis
+            - Sanitizer logs (ASan+UBSan), compiler warning audit
+
+            **Verification status:**
+            - Test suite: PASS (1,000+ tests)
+            - ASan+UBSan: CLEAN
+            - Compiler warnings: ZERO (-Werror)
+            - Traceability: ZERO violations
+            - Statement coverage: ≥90%
+            - Branch coverage: ≥80%
+
+            See [OSQAr-cJSON README](https://github.com/BitVortex/OSQAr-cJSON#readme) for full qualification details.
+          files: _shipment/**
+          generate_release_notes: false

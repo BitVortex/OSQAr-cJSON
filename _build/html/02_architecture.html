@@ -208,8 +208,8 @@
 <li class="toctree-l1"><a class="reference internal" href="03_verification.html">Verification — cJSON Qualification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="04_implementation.html">Implementation — cJSON Qualification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="05_test_results.html">Test Results — cJSON Qualification</a></li>
-<li class="toctree-l1"><a class="reference internal" href="05_test_results.html#coverage-report">Coverage report</a></li>
-<li class="toctree-l1"><a class="reference internal" href="05_test_results.html#complexity-report-lizard">Complexity Report (lizard)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_test_results.html#coverage-report-gcov">Coverage Report (gcov)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_test_results.html#complexity-report-lizard-mccabe">Complexity Report (lizard / McCabe)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="06_lifecycle_management.html">Lifecycle Management — cJSON Qualification</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Traceability</span></p>
@@ -255,7 +255,7 @@
         <article role="main" id="furo-main-content">
           <section id="architecture-cjson-qualification">
 <h1>Architecture — cJSON Qualification<a class="headerlink" href="#architecture-cjson-qualification" title="Link to this heading">¶</a></h1>
-<div class="need_container docutils container" id="SNCB-d0f35f9e">
+<div class="need_container docutils container" id="SNCB-9a852324">
 <table class="need needs_grid_simple needs_layout_clean needs_style_none needs_type_need docutils align-default" id="ARCH_PARSER_FLOW">
 <tbody>
 <tr class="need head row-odd"><td class="need head"><div class="needs_head line-block">
@@ -278,7 +278,7 @@
 </tbody>
 </table>
 </div>
-<div class="need_container docutils container" id="SNCB-2ef4b62e">
+<div class="need_container docutils container" id="SNCB-e4c476ce">
 <table class="need needs_grid_simple needs_layout_clean needs_style_none needs_type_need docutils align-default" id="ARCH_PRINTER_FLOW">
 <tbody>
 <tr class="need head row-odd"><td class="need head"><div class="needs_head line-block">
@@ -301,7 +301,7 @@
 </tbody>
 </table>
 </div>
-<div class="need_container docutils container" id="SNCB-3ddd87d7">
+<div class="need_container docutils container" id="SNCB-99f93975">
 <table class="need needs_grid_simple needs_layout_clean needs_style_none needs_type_need docutils align-default" id="ARCH_MEMORY_MODEL">
 <tbody>
 <tr class="need head row-odd"><td class="need head"><div class="needs_head line-block">
@@ -324,7 +324,7 @@
 </tbody>
 </table>
 </div>
-<div class="need_container docutils container" id="SNCB-6ace643f">
+<div class="need_container docutils container" id="SNCB-711bc199">
 <table class="need needs_grid_simple needs_layout_clean needs_style_none needs_type_need docutils align-default" id="ARCH_DATA_MODEL">
 <tbody>
 <tr class="need head row-odd"><td class="need head"><div class="needs_head line-block">
@@ -346,7 +346,7 @@
 </tbody>
 </table>
 </div>
-<div class="need_container docutils container" id="SNCB-6c9aa29e">
+<div class="need_container docutils container" id="SNCB-542c798f">
 <table class="need needs_grid_simple needs_layout_clean needs_style_none needs_type_need docutils align-default" id="ARCH_MODULE_BOUNDARY">
 <tbody>
 <tr class="need head row-odd"><td class="need head"><div class="needs_head line-block">
@@ -369,9 +369,16 @@
 </tbody>
 </table>
 </div>
-<section id="component-architecture-textual">
-<h2>Component Architecture (textual)<a class="headerlink" href="#component-architecture-textual" title="Link to this heading">¶</a></h2>
-<div class="need_container docutils container" id="SNCB-15a99b94">
+<section id="component-architecture-plantuml">
+<h2>Component Architecture (PlantUML)<a class="headerlink" href="#component-architecture-plantuml" title="Link to this heading">¶</a></h2>
+<figure class="align-center">
+<p class="plantuml">
+<object data="_images/plantuml-d55e6d5d965d8eb91796e3cbd9cd1b4ee47bcd8c.svg" type="image/svg+xml" style="width:548px;height:258px;background:#FEFEFE;">
+<img src="_images/plantuml-d55e6d5d965d8eb91796e3cbd9cd1b4ee47bcd8c.png" alt="cJSON v1.7.19 Component Architecture Diagram"/>
+
+</object></p>
+</figure>
+<div class="need_container docutils container" id="SNCB-64cb4675">
 <table class="need needs_grid_simple needs_layout_clean needs_style_none needs_type_need docutils align-default" id="ARCH_COMPONENT_DECOMPOSITION">
 <tbody>
 <tr class="need head row-odd"><td class="need head"><div class="needs_head line-block">
@@ -394,9 +401,29 @@
 </table>
 </div>
 </section>
+<section id="parser-flow-plantuml">
+<h2>Parser Flow (PlantUML)<a class="headerlink" href="#parser-flow-plantuml" title="Link to this heading">¶</a></h2>
+<figure class="align-center">
+<p class="plantuml">
+<object data="_images/plantuml-d29dd398c184d4bfd2478ce218ead85cbcd6cf44.svg" type="image/svg+xml" style="width:1238px;height:989px;background:#FEFEFE;">
+<img src="_images/plantuml-d29dd398c184d4bfd2478ce218ead85cbcd6cf44.png" alt="cJSON Parser Flow Sequence Diagram"/>
+
+</object></p>
+</figure>
+</section>
+<section id="data-model-plantuml">
+<h2>Data Model (PlantUML)<a class="headerlink" href="#data-model-plantuml" title="Link to this heading">¶</a></h2>
+<figure class="align-center">
+<p class="plantuml">
+<object data="_images/plantuml-9481e639b300f4a4c9cef4c8a1981cab6248ff56.svg" type="image/svg+xml" style="width:465px;height:258px;background:#FEFEFE;">
+<img src="_images/plantuml-9481e639b300f4a4c9cef4c8a1981cab6248ff56.png" alt="cJSON Data Model Class Diagram"/>
+
+</object></p>
+</figure>
+</section>
 <section id="safety-architecture-freedom-from-interference">
 <h2>Safety Architecture — Freedom from Interference<a class="headerlink" href="#safety-architecture-freedom-from-interference" title="Link to this heading">¶</a></h2>
-<div class="need_container docutils container" id="SNCB-6dfd9dec">
+<div class="need_container docutils container" id="SNCB-46fc0262">
 <table class="need needs_grid_simple needs_layout_clean needs_style_none needs_type_need docutils align-default" id="ARCH_FFI_MEASURES">
 <tbody>
 <tr class="need head row-odd"><td class="need head"><div class="needs_head line-block">
@@ -477,7 +504,9 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Architecture — cJSON Qualification</a><ul>
-<li><a class="reference internal" href="#component-architecture-textual">Component Architecture (textual)</a></li>
+<li><a class="reference internal" href="#component-architecture-plantuml">Component Architecture (PlantUML)</a></li>
+<li><a class="reference internal" href="#parser-flow-plantuml">Parser Flow (PlantUML)</a></li>
+<li><a class="reference internal" href="#data-model-plantuml">Data Model (PlantUML)</a></li>
 <li><a class="reference internal" href="#safety-architecture-freedom-from-interference">Safety Architecture — Freedom from Interference</a></li>
 </ul>
 </li>

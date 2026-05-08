@@ -15,6 +15,16 @@ extensions = [
     "sphinx_needs",
 ]
 
+# ── PlantUML (conditionally loaded — v0.7.0 OSQAR feature) ──────────
+_NO_DIAGRAMS = os.environ.get("OSQAR_NO_DIAGRAMS", "").lower() in ("1", "true")
+if not _NO_DIAGRAMS:
+    try:
+        import sphinxcontrib.plantuml
+    except ImportError:
+        pass
+    else:
+        extensions.append("sphinxcontrib.plantuml")
+
 try:
     import sphinxcontrib.test_reports
 except ModuleNotFoundError:
@@ -89,23 +99,26 @@ _ensure_file(
     "interface complexity without reducing logical complexity.\n",
 )
 
-plantuml_output_format = "svg"
+# ── PlantUML configuration (only when diagrams enabled) ─────────────
+if not _NO_DIAGRAMS:
+    plantuml_output_format = "svg"
 
-env_jar = os.environ.get("PLANTUML_JAR")
-if env_jar and Path(env_jar).is_file():
-    plantuml = f'java -jar "{env_jar}"'
-elif shutil.which("java"):
-    for jar_path in (
-        "/opt/plantuml/plantuml.jar",
-        "/usr/share/plantuml/plantuml.jar",
-        "/usr/local/opt/plantuml/libexec/plantuml.jar",
-    ):
-        if Path(jar_path).is_file():
-            plantuml = f'java -jar "{jar_path}"'
-            break
+    env_jar = os.environ.get("PLANTUML_JAR")
+    if env_jar and Path(env_jar).is_file():
+        plantuml = f'java -jar "{env_jar}"'
+    elif shutil.which("java"):
+        for jar_path in (
+            "/opt/data/home/opt/plantuml.jar",
+            "/opt/plantuml/plantuml.jar",
+            "/usr/share/plantuml/plantuml.jar",
+            "/usr/local/opt/plantuml/libexec/plantuml.jar",
+        ):
+            if Path(jar_path).is_file():
+                plantuml = f'java -jar "{jar_path}"'
+                break
+        else:
+            plantuml = "https://www.plantuml.com/plantuml"
+            plantuml_output_format = "png"
     else:
         plantuml = "https://www.plantuml.com/plantuml"
         plantuml_output_format = "png"
-else:
-    plantuml = "https://www.plantuml.com/plantuml"
-    plantuml_output_format = "png"

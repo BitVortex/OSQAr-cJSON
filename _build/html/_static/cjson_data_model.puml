@@ -1,0 +1,48 @@
+@startuml cjson_data_model
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 11
+
+title cJSON Data Model — Tagged Union
+
+class cJSON #BFD8D2 {
+  + type : int
+  + valuestring : char*
+  + valueint : int
+  + valuedouble : double
+  + string : char*
+  + child : cJSON*
+  + next : cJSON*
+  + prev : cJSON*
+}
+
+enum cJSON_Type {
+  cJSON_Invalid = 0
+  cJSON_False
+  cJSON_True
+  cJSON_NULL
+  cJSON_Number
+  cJSON_String
+  cJSON_Array
+  cJSON_Object
+  cJSON_Raw
+}
+
+cJSON "1" -- "0..1" cJSON_Type : type
+cJSON "1" -- "0..*" cJSON : child
+cJSON "0..1" -- "0..1" cJSON : next
+cJSON "0..1" -- "0..1" cJSON : prev
+
+note top of cJSON
+  78 public API functions
+  All state in caller-owned
+  cJSON* objects.
+  No global state.
+end note
+
+note right of cJSON_Type
+  Six value types per
+  JSON / RFC 8259
+end note
+
+@enduml

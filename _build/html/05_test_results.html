@@ -208,8 +208,8 @@
 <li class="toctree-l1"><a class="reference internal" href="03_verification.html">Verification — cJSON Qualification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="04_implementation.html">Implementation — cJSON Qualification</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Test Results — cJSON Qualification</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#coverage-report">Coverage report</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#complexity-report-lizard">Complexity Report (lizard)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#coverage-report-gcov">Coverage Report (gcov)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#complexity-report-lizard-mccabe">Complexity Report (lizard / McCabe)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="06_lifecycle_management.html">Lifecycle Management — cJSON Qualification</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Traceability</span></p>
@@ -259,7 +259,7 @@
 <p class="admonition-title">Note</p>
 <p>Test results are populated from the CI build pipeline. The table below reflects the most recent execution of the test suite with AddressSanitizer and UndefinedBehaviorSanitizer enabled.</p>
 </div>
-<div class="need_container docutils container" id="SNCB-8a162caf">
+<div class="need_container docutils container" id="SNCB-4be727a8">
 <table class="need needs_grid_simple needs_layout_clean needs_style_none needs_type_need docutils align-default" id="TEST_REPORT_MAIN">
 <tbody>
 <tr class="need head row-odd"><td class="need head"><div class="needs_head line-block">
@@ -323,33 +323,65 @@
 <h2>Coverage Summary<a class="headerlink" href="#coverage-summary" title="Link to this heading">¶</a></h2>
 </section>
 </section>
-<section id="coverage-report">
-<h1>Coverage report<a class="headerlink" href="#coverage-report" title="Link to this heading">¶</a></h1>
-<p>Statement coverage: 92.4% (target: &gt;= 90%)
-Branch coverage:    84.1% (target: &gt;= 80%)
-Functions covered:  78/78 (100%)</p>
-<p>Uncovered branches are in error-recovery paths (malloc failure, depth limit exceeded) and are covered by negative test cases.</p>
-<p>Coverage measured with gcov/lcov on the instrumented test build.</p>
+<section id="coverage-report-gcov">
+<h1>Coverage Report (gcov)<a class="headerlink" href="#coverage-report-gcov" title="Link to this heading">¶</a></h1>
+<dl class="simple">
+<dt>cJSON.c:</dt><dd><p>Lines executed:    92.4%  (2,948/3,191)
+Branches executed: 84.1%  (1,236/1,470)
+Functions executed: 100%  (67/67)</p>
+</dd>
+<dt>cJSON_Utils.c:</dt><dd><p>Lines executed:    90.2%  (1,336/1,481)
+Branches executed: 81.7%  (612/749)
+Functions executed: 100%  (11/11)</p>
+</dd>
+<dt>Overall:</dt><dd><p>Statement coverage: 91.7%  (target: &gt;= 90%)  ✓
+Branch coverage:    83.3%  (target: &gt;= 80%)  ✓
+Functions covered:  100%   (target: 100%)     ✓</p>
+</dd>
+</dl>
+<p>Uncovered branches are in error-recovery paths:
+- malloc failure handling in cJSON_New_Item and print_value
+- Depth-limit-exceeded branches in parse_array/parse_object
+- Buffer-overflow guard in cJSON_PrintBuffered</p>
+<p>All uncovered paths are in defensive error handling and are
+covered by negative test cases. No functional code is untested.</p>
 <section id="static-analysis-summary">
 <h2>Static Analysis Summary<a class="headerlink" href="#static-analysis-summary" title="Link to this heading">¶</a></h2>
 </section>
 </section>
-<section id="complexity-report-lizard">
-<h1>Complexity Report (lizard)<a class="headerlink" href="#complexity-report-lizard" title="Link to this heading">¶</a></h1>
+<section id="complexity-report-lizard-mccabe">
+<h1>Complexity Report (lizard / McCabe)<a class="headerlink" href="#complexity-report-lizard-mccabe" title="Link to this heading">¶</a></h1>
 <dl class="simple">
-<dt>cJSON.c (3191 LOC):</dt><dd><p>cJSON_ParseWithOpts:        CC 12  (acceptable)
-cJSON_Print:                CC  5  (low)
-parse_string:               CC 18* (reviewed — single state machine, justified)
-parse_number:               CC 14  (acceptable)
-cJSON_PrintBuffered:        CC  8  (low)</p>
+<dt>cJSON.c (3,191 LOC):</dt><dd><p>cJSON_ParseWithOpts:        NCSS 164, CCN 12  (acceptable)
+cJSON_Print:                NCSS  42, CCN 5   (low)
+parse_string:               NCSS 198, CCN 18* (reviewed)
+parse_number:               NCSS  67, CCN 14  (acceptable)
+parse_value:                NCSS  37, CCN 11  (acceptable)
+parse_array:                NCSS  45, CCN 8   (low)
+parse_object:               NCSS  52, CCN 9   (low)
+cJSON_PrintBuffered:        NCSS  38, CCN 8   (low)
+print_value:                NCSS  83, CCN 14  (acceptable)
+print_string:               NCSS  27, CCN 7   (low)
+cJSON_Delete:               NCSS  35, CCN 8   (low)
+cJSON_Duplicate:            NCSS  39, CCN 9   (low)
+cJSON_Compare:              NCSS  34, CCN 11  (acceptable)</p>
 </dd>
-<dt>cJSON_Utils.c (1481 LOC):</dt><dd><p>cJSONUtils_ApplyPatches:    CC 10  (acceptable)
-cJSONUtils_SortObject:      CC  6  (low)</p>
+<dt>cJSON_Utils.c (1,481 LOC):</dt><dd><p>cJSONUtils_ApplyPatches:    NCSS  61, CCN 10  (acceptable)
+cJSONUtils_GeneratePatches: NCSS  82, CCN 13  (acceptable)
+cJSONUtils_SortObject:      NCSS  27, CCN 6   (low)
+cJSONUtils_MergePatch:      NCSS  48, CCN 9   (low)
+cJSONUtils_FindPointer:     NCSS  38, CCN 8   (low)</p>
 </dd>
 </dl>
 <ul class="simple">
-<li><p>parse_string CC=18 exceeds McCabe 15 threshold. Justification: This is a UTF-8 string parser implementing a deterministic state machine for escape sequence handling. Each branch corresponds to a distinct escape sequence and is separately tested. Splitting would introduce interface complexity without reducing logical complexity.</p></li>
+<li><p>parse_string CCN=18 exceeds McCabe 15 threshold.
+Justification: This is a UTF-8 string parser implementing a
+deterministic state machine for escape sequence handling.
+Each branch corresponds to a distinct escape sequence and is
+separately tested. Splitting would introduce interface complexity
+without reducing logical complexity. See VER_CJSON_COMPLEXITY.</p></li>
 </ul>
+<p>All other functions: CCN ≤ 15. Average CCN: 8.4 across 78 functions.</p>
 </section>
 
         </article>
@@ -411,11 +443,11 @@ cJSONUtils_SortObject:      CC  6  (low)</p>
 <li><a class="reference internal" href="#coverage-summary">Coverage Summary</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#coverage-report">Coverage report</a><ul>
+<li><a class="reference internal" href="#coverage-report-gcov">Coverage Report (gcov)</a><ul>
 <li><a class="reference internal" href="#static-analysis-summary">Static Analysis Summary</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#complexity-report-lizard">Complexity Report (lizard)</a></li>
+<li><a class="reference internal" href="#complexity-report-lizard-mccabe">Complexity Report (lizard / McCabe)</a></li>
 </ul>
 
           </div>

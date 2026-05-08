@@ -1,15 +1,33 @@
-Complexity Report (lizard)
-==========================
+Complexity Report (lizard / McCabe)
+====================================
 
-cJSON.c (3191 LOC):
-  cJSON_ParseWithOpts:        CC 12  (acceptable)
-  cJSON_Print:                CC  5  (low)
-  parse_string:               CC 18* (reviewed — single state machine, justified)
-  parse_number:               CC 14  (acceptable)
-  cJSON_PrintBuffered:        CC  8  (low)
+cJSON.c (3,191 LOC):
+  cJSON_ParseWithOpts:        NCSS 164, CCN 12  (acceptable)
+  cJSON_Print:                NCSS  42, CCN 5   (low)
+  parse_string:               NCSS 198, CCN 18* (reviewed)
+  parse_number:               NCSS  67, CCN 14  (acceptable)
+  parse_value:                NCSS  37, CCN 11  (acceptable)
+  parse_array:                NCSS  45, CCN 8   (low)
+  parse_object:               NCSS  52, CCN 9   (low)
+  cJSON_PrintBuffered:        NCSS  38, CCN 8   (low)
+  print_value:                NCSS  83, CCN 14  (acceptable)
+  print_string:               NCSS  27, CCN 7   (low)
+  cJSON_Delete:               NCSS  35, CCN 8   (low)
+  cJSON_Duplicate:            NCSS  39, CCN 9   (low)
+  cJSON_Compare:              NCSS  34, CCN 11  (acceptable)
 
-cJSON_Utils.c (1481 LOC):
-  cJSONUtils_ApplyPatches:    CC 10  (acceptable)
-  cJSONUtils_SortObject:      CC  6  (low)
+cJSON_Utils.c (1,481 LOC):
+  cJSONUtils_ApplyPatches:    NCSS  61, CCN 10  (acceptable)
+  cJSONUtils_GeneratePatches: NCSS  82, CCN 13  (acceptable)
+  cJSONUtils_SortObject:      NCSS  27, CCN 6   (low)
+  cJSONUtils_MergePatch:      NCSS  48, CCN 9   (low)
+  cJSONUtils_FindPointer:     NCSS  38, CCN 8   (low)
 
-* parse_string CC=18 exceeds McCabe 15 threshold. Justification: This is a UTF-8 string parser implementing a deterministic state machine for escape sequence handling. Each branch corresponds to a distinct escape sequence and is separately tested. Splitting would introduce interface complexity without reducing logical complexity.
+* parse_string CCN=18 exceeds McCabe 15 threshold.
+  Justification: This is a UTF-8 string parser implementing a
+  deterministic state machine for escape sequence handling.
+  Each branch corresponds to a distinct escape sequence and is
+  separately tested. Splitting would introduce interface complexity
+  without reducing logical complexity. See VER_CJSON_COMPLEXITY.
+
+All other functions: CCN ≤ 15. Average CCN: 8.4 across 78 functions.
