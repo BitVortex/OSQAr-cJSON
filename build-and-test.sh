@@ -234,7 +234,13 @@ run_coverage() {
     local orig_lib="${CJSON_DIR}/build/libcjson.a"
     cp build/libcjson_cov.a build/libcjson.a
 
+    # ── Run tests with coverage instrumentation ────────────────────────
     run_test_suite coverage
+
+    # Remove test binary coverage files (named <test>-<source>.gcno/.gcda).
+    # Their .gcno files reference ../cJSON.c which gcovr can't resolve,
+    # producing a competing 0% entry. Keep only library object coverage.
+    rm -f build/*-*.gcno build/*-*.gcda 2>/dev/null || true
 
     # Restore original library
     cp build/libcjson_cov.a build/libcjson_cov_backup.a 2>/dev/null || true
@@ -250,7 +256,8 @@ run_coverage() {
 
     # Extract real coverage numbers via gcovr
     if command -v gcovr &>/dev/null; then
-        # Only measure cJSON source files; ignore test runners and Unity
+        # Run from tests/ because test .gcno files reference ../cJSON.c
+        # (relative to cjson-source/tests/ = cjson-source/cJSON.c)
         gcovr -r "${CJSON_DIR}" --object-directory="${CJSON_DIR}/build" \
             --filter 'cJSON\.c$' --filter 'cJSON_Utils\.c$' \
             --gcov-ignore-errors=no_working_dir_found \
