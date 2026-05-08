@@ -244,13 +244,27 @@ run_coverage() {
     ar rcs build/libcjson.a build/cJSON.o build/cJSON_Utils.o 2>/dev/null || \
         ar rcs build/libcjson.a build/cJSON.o
 
-    # Run gcov on the instrumented objects
-    cd "${CJSON_DIR}"
-    gcov -b build/cJSON_cov.o 2>/dev/null > "${OUT_DIR}/gcov_cjson.txt" || true
-    gcov -b build/cJSON_Utils_cov.o 2>/dev/null > "${OUT_DIR}/gcov_utils.txt" || true
+    # ── Extract coverage from test binary .gcno/.gcda files ────────────
+    # Coverage for statically-linked cJSON functions is recorded in the
+    # process's .gcda files (test binaries), not the library objects.
+    # Run gcov from tests/ so ../cJSON.c paths resolve correctly.
+    cd "${CJSON_DIR}/tests"
+    # Pick one test binary's gcno as the entry point — it contains
+    # coverage for all linked translation units including cJSON.c
+    local test_gcno="${CJSON_DIR}/build/parse_examples-parse_examples.gcno"
+    if [ -f "${test_gcno}" ]; then
+        gcov -b -o "${CJSON_DIR}/build" "${test_gcno}" \
+            > "${OUT_DIR}/gcov_cjson.txt" 2>&1 || true
+    fi
+    # Also process cJSON_Utils from a test that exercises it
+    local utils_gcno="${CJSON_DIR}/build/json_patch_tests-json_patch_tests.gcno"
+    if [ -f "${utils_gcno}" ]; then
+        gcov -b -o "${CJSON_DIR}/build" "${utils_gcno}" \
+            > "${OUT_DIR}/gcov_utils.txt" 2>&1 || true
+    fi
+    # Stay in tests/ for parsing (gcov output files are written to CWD)
 
-    # Extract real coverage numbers — use raw gcov output (more reliable
-    # than gcovr which has path resolution issues with test binary .gcno files)
+    # Extract real coverage numbers — parse gcov output files in tests/
     if [ -f "cJSON.c.gcov" ]; then
         cjson_exec=$(grep -cE '^[[:space:]]+[0-9]+:' cJSON.c.gcov 2>/dev/null || true)
         cjson_total=$(grep -cE '^[[:space:]]+([0-9]+|#####):' cJSON.c.gcov 2>/dev/null || true)
