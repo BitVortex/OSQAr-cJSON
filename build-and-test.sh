@@ -319,7 +319,7 @@ Uncovered lines are expected in error-recovery paths:
 
 Raw gcov output: _build/evidence/gcov_cjson.txt, _build/evidence/gcov_utils.txt
 REPORT
-    echo "  coverage_report.txt written (stmt: ${stmt_pct}%, branch: ${branch_pct}%)"
+    echo "  coverage_report.txt written (stmt: ${stmt_pct}%)"
 }
 
 # ── Complexity ───────────────────────────────────────────────────────
