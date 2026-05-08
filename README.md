@@ -35,7 +35,7 @@ Tagged releases follow the format **`cjson_version-osqar_version`** (e.g., `1.7.
 - **45 needs** across 6 documents: 12 requirements, 7 architecture elements, 14 verification activities, 6 lifecycle items
 - **56 bidirectional links**, **zero traceability violations** — verified via `osqar traceability --test-prefix VER_ --code-prefix IMPL_`
 - **cJSON builds with `-Werror -Wall -Wextra -Wconversion`** — zero warnings across 5,066 LOC
-- **Test suite passes** under ASan+UBSan instrumentation — clean
+- **162 Unity tests** across 21 executables — all pass under ASan+UBSan instrumentation
 - **Sphinx HTML** built with PlantUML architecture diagrams, zero warnings
 - **CI pipeline** on every push and tag: build → test → sanitize → coverage → docs → traceability → shipment → release
 
@@ -93,12 +93,12 @@ osqar traceability _build/html/needs.json \
 | # | Activity | Status |
 |---|----------|--------|
 | 1 | Compiler warning audit (`-Werror`) | ✅ Zero warnings |
-| 2 | Test suite (1,000+ tests) | ✅ PASS |
+| 2 | Test suite (162 Unity tests) | ✅ PASS |
 | 3 | ASan+UBSan instrumentation | ✅ Clean |
 | 4 | Stack depth verification (nesting limit 1000) | ✅ Enforced |
 | 5 | NULL-pointer safety (all 78 API functions) | ✅ Deterministic |
-| 6 | Coverage measurement (gcov, ≥90% stmt, ≥80% branch) | ✅ 91.7% / 83.3% |
-| 7 | Complexity analysis (lizard, McCabe ≤15) | ✅ One justified exception |
+| 6 | Coverage measurement (gcov/gcovr) | ✅ In pipeline |
+| 7 | Complexity analysis (lizard, McCabe) | ✅ In pipeline |
 | 8 | Static analysis (cppcheck) | ✅ In pipeline |
 
 ### Planned — tracked as GitHub issues

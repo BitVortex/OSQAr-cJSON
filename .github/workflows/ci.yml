@@ -149,12 +149,11 @@ jobs:
             - Sanitizer logs (ASan+UBSan), compiler warning audit
 
             **Verification status:**
-            - Test suite: PASS (1,000+ tests)
+            - Test suite: PASS (162 Unity tests across 21 executables)
             - ASan+UBSan: CLEAN
             - Compiler warnings: ZERO (-Werror)
             - Traceability: ZERO violations
-            - Statement coverage: ≥90%
-            - Branch coverage: ≥80%
+            - Coverage and complexity metrics: see `reports/` in the shipment ZIP
 
             See [OSQAr-cJSON README](https://github.com/BitVortex/OSQAr-cJSON#readme) for full qualification details.
           files: |
