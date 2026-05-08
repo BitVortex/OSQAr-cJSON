@@ -1,0 +1,13 @@
+{
+  "version": "1.7.19",
+  "origin": {
+    "vcs": "git",
+    "url": "https://github.com/DaveGamble/cJSON",
+    "tag": "v1.7.19"
+  },
+  "commands": {
+    "build": "cd cjson-source && make CC='gcc -std=c99' CJSON_TEST=0",
+    "test": "cd cjson-source && gcc -std=c99 -g -O1 -I. -Itests tests/*.c cJSON.c -lm -o test_runner && ./test_runner",
+    "static-analysis": "cppcheck --enable=all --inconclusive --suppress=missingIncludeSystem -I. cJSON.c cJSON_Utils.c"
+  }
+}

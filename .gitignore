@@ -1,0 +1,27 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Sphinx build doctrees (intermediate, not delivered)
+_build/html/.doctrees/
+_build/html/.buildinfo
+
+# LaTeX intermediates (paper prevention — no paper in this repo)
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
+*.fdb_latexmk
+*.fls
+*.synctex.gz *.lof *.lot *.nav *.snm *.vrb *.run.xml *.bcf
+
+# Editor temp
+*.swp
+*.swo
+*~
+
+# PDFs are deliverables — always committed
+!*.pdf

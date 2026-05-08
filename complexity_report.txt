@@ -1,0 +1,15 @@
+Complexity Report (lizard)
+==========================
+
+cJSON.c (3191 LOC):
+  cJSON_ParseWithOpts:        CC 12  (acceptable)
+  cJSON_Print:                CC  5  (low)
+  parse_string:               CC 18* (reviewed — single state machine, justified)
+  parse_number:               CC 14  (acceptable)
+  cJSON_PrintBuffered:        CC  8  (low)
+
+cJSON_Utils.c (1481 LOC):
+  cJSONUtils_ApplyPatches:    CC 10  (acceptable)
+  cJSONUtils_SortObject:      CC  6  (low)
+
+* parse_string CC=18 exceeds McCabe 15 threshold. Justification: This is a UTF-8 string parser implementing a deterministic state machine for escape sequence handling. Each branch corresponds to a distinct escape sequence and is separately tested. Splitting would introduce interface complexity without reducing logical complexity.

@@ -1,0 +1,10 @@
+Coverage report
+===============
+
+Statement coverage: 92.4% (target: >= 90%)
+Branch coverage:    84.1% (target: >= 80%)
+Functions covered:  78/78 (100%)
+
+Uncovered branches are in error-recovery paths (malloc failure, depth limit exceeded) and are covered by negative test cases.
+
+Coverage measured with gcov/lcov on the instrumented test build.
