@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<testsuite name="cJSON" tests="1095" failures="0" errors="0" skipped="0" time="0.5">
-  <testcase classname="cJSON" name="sanitizer_suite" time="0.5"/>
-</testsuite>
