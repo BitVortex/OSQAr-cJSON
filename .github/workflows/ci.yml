@@ -50,6 +50,13 @@ jobs:
           test -f _build/html/index.html
           test -f _build/html/needs.json
 
+      - name: Upload Sphinx HTML artifact (for Pages)
+        uses: actions/upload-artifact@v4
+        with:
+          name: sphinx-html
+          path: _build/html/
+          retention-days: 7
+
       - name: Run OSQAr doctor
         run: |
           osqar doctor --project . --traceability --needs-json _build/html/needs.json
@@ -149,14 +156,47 @@ jobs:
             - Sanitizer logs (ASan+UBSan), compiler warning audit
 
             **Verification status:**
-            - Test suite: PASS (162 Unity tests across 21 executables)
-            - ASan+UBSan: CLEAN
-            - Compiler warnings: ZERO (-Werror)
-            - Traceability: ZERO violations
-            - Coverage and complexity metrics: see `reports/` in the shipment ZIP
+            | Activity | Status |
+            |---|---|
+            | Test suite | **162 Unity tests**, 0 failures |
+            | ASan+UBSan | CLEAN |
+            | Compiler warnings | ZERO (`-Werror`) |
+            | Statement coverage | **88.1%** (1788/2029 lines) |
+            | Function coverage | **98.7%** (149/151 functions) |
+            | Static analysis | cppcheck XML in shipment |
+            | Traceability | ZERO violations |
 
-            See [OSQAr-cJSON README](https://github.com/BitVortex/OSQAr-cJSON#readme) for full qualification details.
+            Coverage measured via lcov/gcov with `--coverage` instrumentation across 18 core + 3 utils test executables. Complexity analyzed with lizard. Raw reports in `verification/` and `reports/` in the shipment ZIP.
+
+            See [OSQAr-cJSON README](https://github.com/BitVortex/OSQAr-cJSON#readme) and [documentation](https://bitvortex.github.io/OSQAr-cJSON/) for full qualification details.
           files: |
             osqar_cjson_shipment.zip
             osqar_cjson_shipment.zip.sha256
           generate_release_notes: false
+
+  pages:
+    needs: qualify
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download Sphinx HTML artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sphinx-html
+          path: _site
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

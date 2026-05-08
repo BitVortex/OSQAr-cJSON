@@ -4,6 +4,7 @@
 [![OSQAr](https://img.shields.io/badge/OSQAr-v0.7.0-blue)](https://github.com/BitVortex/OSQAr/releases/tag/v0.7.0)
 [![cJSON](https://img.shields.io/badge/cJSON-v1.7.19-green)](https://github.com/DaveGamble/cJSON/releases/tag/v1.7.19)
 [![Release](https://img.shields.io/badge/release-1.7.19--0.7.0-orange)](https://github.com/BitVortex/OSQAr-cJSON/releases/tag/1.7.19-0.7.0)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-brightgreen)](https://bitvortex.github.io/OSQAr-cJSON/)
 
 > ⚠️ **RESEARCH REPOSITORY — NO WARRANTY**  
 > This is an **active research repository** for agentic qualification of open-source software for cyber-physical systems. The OSQAr framework and all qualification artifacts herein are produced by autonomous AI agents in a research setting. **Information may be inconsistent, outdated, incomplete, or just plain wrong.** No warranty, express or implied, is provided. No liability is assumed for any use of this material in safety-critical contexts. This qualification has **not** been reviewed or approved by any accredited certification body. Do **not** use in production safety systems without independent expert review.
