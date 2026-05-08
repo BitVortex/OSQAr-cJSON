@@ -237,11 +237,6 @@ run_coverage() {
     # ── Run tests with coverage instrumentation ────────────────────────
     run_test_suite coverage
 
-    # Remove test binary coverage files (named <test>-<source>.gcno/.gcda).
-    # Their .gcno files reference ../cJSON.c which gcovr can't resolve,
-    # producing a competing 0% entry. Keep only library object coverage.
-    rm -f build/*-*.gcno build/*-*.gcda 2>/dev/null || true
-
     # Restore original library
     cp build/libcjson_cov.a build/libcjson_cov_backup.a 2>/dev/null || true
     ${CC} -std=${CSTD} -O2 -c cJSON.c -o build/cJSON.o
@@ -254,57 +249,47 @@ run_coverage() {
     gcov -b build/cJSON_cov.o 2>/dev/null > "${OUT_DIR}/gcov_cjson.txt" || true
     gcov -b build/cJSON_Utils_cov.o 2>/dev/null > "${OUT_DIR}/gcov_utils.txt" || true
 
-    # Extract real coverage numbers via gcovr
-    if command -v gcovr &>/dev/null; then
-        # Run from tests/ because test .gcno files reference ../cJSON.c
-        # (relative to cjson-source/tests/ = cjson-source/cJSON.c)
-        gcovr -r "${CJSON_DIR}" --object-directory="${CJSON_DIR}/build" \
-            --filter 'cJSON\.c$' --filter 'cJSON_Utils\.c$' \
-            --gcov-ignore-errors=no_working_dir_found \
-            --print-summary > "${OUT_DIR}/gcovr_summary.txt" 2>&1 || true
-
-        # Parse gcovr summary (gcovr 5.x-7.x format: "lines: 92.4% (2948 out of 3191)")
-        stmt_pct=$(grep -oiP 'lines?:?\s*\K[\d.]+(?=%)' "${OUT_DIR}/gcovr_summary.txt" 2>/dev/null | head -1 || echo "N/A")
-        stmt_hit=$(grep -oiP 'lines?:.*?\(\K\d+' "${OUT_DIR}/gcovr_summary.txt" 2>/dev/null | head -1 || echo "0")
-        stmt_total=$(grep -oiP 'lines?:.*?out of \K\d+' "${OUT_DIR}/gcovr_summary.txt" 2>/dev/null | head -1 || echo "0")
-        branch_pct=$(grep -oiP 'branches?:?\s*\K[\d.]+(?=%)' "${OUT_DIR}/gcovr_summary.txt" 2>/dev/null | head -1 || echo "N/A")
-
-        # Fallback: try percentage-only format (gcovr --print-summary -j or compact)
-        if [ "${stmt_pct}" = "N/A" ]; then
-            stmt_pct=$(grep -oiP 'line.*?coverage.*?\K[\d.]+(?=%)' "${OUT_DIR}/gcovr_summary.txt" 2>/dev/null | head -1 || echo "N/A")
-        fi
-        if [ "${branch_pct}" = "N/A" ]; then
-            branch_pct=$(grep -oiP 'branch.*?coverage.*?\K[\d.]+(?=%)' "${OUT_DIR}/gcovr_summary.txt" 2>/dev/null | head -1 || echo "N/A")
-        fi
+    # Extract real coverage numbers — use raw gcov output (more reliable
+    # than gcovr which has path resolution issues with test binary .gcno files)
+    if [ -f "cJSON.c.gcov" ]; then
+        # Lines executed count: lines starting with a number (not #####, not -)
+        cjson_exec=$(grep -cP '^\s+\d+:' cJSON.c.gcov 2>/dev/null || echo 0)
+        cjson_total=$(grep -cP '^\s+(?:\d+|#####):' cJSON.c.gcov 2>/dev/null || echo 0)
+    else
+        cjson_exec=0; cjson_total=0
+    fi
+    if [ -f "cJSON_Utils.c.gcov" ]; then
+        utils_exec=$(grep -cP '^\s+\d+:' cJSON_Utils.c.gcov 2>/dev/null || echo 0)
+        utils_total=$(grep -cP '^\s+(?:\d+|#####):' cJSON_Utils.c.gcov 2>/dev/null || echo 0)
+    else
+        utils_exec=0; utils_total=0
+    fi
+    stmt_hit=$((cjson_exec + utils_exec))
+    stmt_total=$((cjson_total + utils_total))
+    if [ "${stmt_total}" -gt 0 ]; then
+        stmt_pct=$(python3 -c "print(round(${stmt_hit}*100/${stmt_total}, 1))")
     else
         stmt_pct="N/A"
-        branch_pct="N/A"
-        stmt_hit="0"
-        stmt_total="0"
     fi
+    branch_pct="N/A"  # gcov branch parsing is unreliable; omit
 
     # Build coverage report from gcovr data
     cat > "${SCRIPT_DIR}/coverage_report.txt" <<REPORT
-Coverage Report (gcovr / gcov)
-===============================
+Coverage Report (gcov)
+======================
 
 Measurement obtained by instrumenting cJSON with --coverage,
 running the full Unity test suite (${#UNITY_TESTS[@]} core + ${#UNITY_UTILS_TESTS[@]} utils test executables),
-and extracting metrics via gcovr.
+and extracting line coverage via gcov.
 
 Statement coverage: ${stmt_pct}%  (${stmt_hit}/${stmt_total} lines executed)
-Branch coverage:    ${branch_pct}%
 
-Uncovered branches are expected in error-recovery paths:
+Uncovered lines are expected in error-recovery paths:
 - malloc failure handling in cJSON_New_Item and print_value
 - Depth-limit-exceeded branches in parse_array/parse_object
 - Buffer-overflow guard in cJSON_PrintBuffered
 
-All uncovered paths are in defensive error handling. No functional
-code paths are untested.
-
 Raw gcov output: _build/evidence/gcov_cjson.txt, _build/evidence/gcov_utils.txt
-Gcovr summary:    _build/evidence/gcovr_summary.txt
 REPORT
     echo "  coverage_report.txt written (stmt: ${stmt_pct}%, branch: ${branch_pct}%)"
 }
