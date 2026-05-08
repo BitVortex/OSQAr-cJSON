@@ -1,0 +1,139 @@
+/* Theme integration tweaks.
+
+   These rules are designed to be safe with Furo's built-in light/dark modes.
+
+   - PlantUML HTML embeds an inline `background:#...` on the <object>, which can
+     clash with dark mode; override it to be transparent.
+   - sphinx-needs "need" tables use their own backgrounds; align them with
+     theme CSS variables so they follow the active theme.
+   - PlantUML diagrams are constrained to the text column width, with
+     click-to-zoom via a CSS-only lightbox (:target).
+*/
+
+/* --- PlantUML ------------------------------------------------------------ */
+
+/* Override sphinxcontrib-plantuml's inline background style. */
+p.plantuml object,
+p.plantuml img {
+  background: transparent !important;
+}
+
+/* Improve contrast for typical black-on-white diagrams in dark mode.
+   (Best-effort: this applies a filter to the rendered asset.) */
+body[data-theme="dark"] p.plantuml object,
+body[data-theme="dark"] p.plantuml img {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Constrain PlantUML diagrams to the text column width.
+   SVGs are vector graphics — they remain crisp when scaled down.
+   The user can right-click → Open Image in New Tab for full resolution. */
+p.plantuml object,
+p.plantuml img {
+  max-width: 100%;
+  height: auto !important;
+  cursor: zoom-in;
+}
+
+/* Subtle scale-up on hover to hint at zoomability. */
+p.plantuml object:hover,
+p.plantuml img:hover {
+  transform: scale(1.02);
+  transition: transform 0.15s ease;
+}
+
+/* CSS-only lightbox for PlantUML diagrams.
+   Click the diagram's parent section heading link (¶) to trigger,
+   or use the diagram's own ID if wrapped in an <a>. */
+.plantuml-lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 9999;
+  cursor: zoom-out;
+  align-items: center;
+  justify-content: center;
+}
+
+.plantuml-lightbox:target {
+  display: flex;
+}
+
+.plantuml-lightbox img,
+.plantuml-lightbox object {
+  max-width: 95vw;
+  max-height: 95vh;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Close hint */
+.plantuml-lightbox::after {
+  content: "✕  Click anywhere to close";
+  position: fixed;
+  top: 16px;
+  right: 24px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-family: system-ui, sans-serif;
+  pointer-events: none;
+}
+
+
+/* --- sphinx-needs -------------------------------------------------------- */
+
+table.need {
+  background: var(--color-background-primary, transparent);
+  color: var(--color-foreground-primary, inherit);
+  border: 1px solid var(
+    --color-background-border,
+    var(--color-border, rgba(127, 127, 127, 0.35))
+  );
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+table.need td,
+table.need th {
+  border-color: var(
+    --color-background-border,
+    var(--color-border, rgba(127, 127, 127, 0.35))
+  ) !important;
+}
+
+/* Remove row striping/backgrounds that assume a light page. */
+table.need tr.row-odd,
+table.need tr.row-even {
+  background: transparent !important;
+}
+
+table.need tr.need.head td.need.head {
+  background: var(--color-background-secondary, rgba(127, 127, 127, 0.08));
+}
+
+table.need tr.need.meta td.need.meta {
+  background: var(--color-background-primary, transparent);
+}
+
+table.need tr.need.content td.need.content {
+  background: var(--color-background-primary, transparent);
+}
+
+.needs_head,
+.needs_meta {
+  color: var(--color-foreground-primary, inherit);
+}
+
+.needs_label {
+  color: var(--color-foreground-muted, var(--color-foreground-secondary, #666));
+}
+
+/* --- Responsive needs tables (prevent overflow on narrow viewports) ----- */
+
+table.need {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
