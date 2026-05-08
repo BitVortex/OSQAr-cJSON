@@ -110,9 +110,9 @@ run_test_suite() {
             export ASAN_OPTIONS="detect_leaks=1:exitcode=1"
             ;;
         coverage)
-            cflags="${COVERAGE_FLAGS}"
+            cflags="-O2"  # test binaries don't need coverage flags; only the library is instrumented
             label="Coverage"
-            outfile="/dev/null"  # coverage run doesn't need its own XML
+            outfile="/dev/null"
             ;;
         *)
             cflags="-O2"
