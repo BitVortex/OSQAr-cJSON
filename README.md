@@ -6,7 +6,7 @@ cJSON v1.7.19 qualified as an ISO 26262 ASIL D Safety Element out of Context (SE
 
 | Component | Repository | Branch / Tag |
 |-----------|-----------|-------------|
-| **OSQAr** | [BitVortex/OSQAr](https://github.com/BitVortex/OSQAr) | `main` (as of May 2026) |
+| **OSQAr** | [BitVortex/OSQAr](https://github.com/BitVortex/OSQAr) | [`v0.7.0`](https://github.com/BitVortex/OSQAr/releases/tag/v0.7.0) |
 | **cJSON** | [DaveGamble/cJSON](https://github.com/DaveGamble/cJSON) | [`v1.7.19`](https://github.com/DaveGamble/cJSON/releases/tag/v1.7.19) |
 
 ## Qualification Summary
@@ -24,11 +24,12 @@ cJSON v1.7.19 qualified as an ISO 26262 ASIL D Safety Element out of Context (SE
 # Install dependencies
 python3 -m pip install -r requirements-docs.txt
 
-# Build Sphinx HTML
-python3 -m sphinx -b html -W . _build/html
+# Build Sphinx HTML (without PlantUML diagrams if not needed)
+OSQAR_NO_DIAGRAMS=1 python3 -m sphinx -b html -W . _build/html
 
-# Verify traceability
-python3 /path/to/osqar/tools/traceability_check.py _build/html/needs.json
+# Verify traceability (with cJSON custom need-ID prefixes)
+osqar traceability _build/html/needs.json \
+  --test-prefix VER_ --code-prefix IMPL_
 ```
 
 ## Repository Structure
