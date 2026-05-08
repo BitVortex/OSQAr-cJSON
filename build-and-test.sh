@@ -248,15 +248,24 @@ run_coverage() {
     gcov -b build/cJSON_cov.o 2>/dev/null > "${OUT_DIR}/gcov_cjson.txt" || true
     gcov -b build/cJSON_Utils_cov.o 2>/dev/null > "${OUT_DIR}/gcov_utils.txt" || true
 
-    # Extract real coverage numbers via gcovr (more reliable than raw gcov parsing)
+    # Extract real coverage numbers via gcovr
     if command -v gcovr &>/dev/null; then
-        gcovr -r "${CJSON_DIR}" --object-directory="${CJSON_DIR}" \
+        gcovr -r "${CJSON_DIR}" --object-directory="${CJSON_DIR}/build" \
             --print-summary > "${OUT_DIR}/gcovr_summary.txt" 2>&1 || true
-        # Parse: "lines: 92.4% (2948 out of 3191)"
-        stmt_pct=$(grep -oP 'lines:\s*\K[\d.]+' "${OUT_DIR}/gcovr_summary.txt" 2>/dev/null || echo "N/A")
-        stmt_hit=$(grep -oP 'lines:.*?\(\K\d+' "${OUT_DIR}/gcovr_summary.txt" 2>/dev/null || echo "0")
-        stmt_total=$(grep -oP 'lines:.*?out of \K\d+' "${OUT_DIR}/gcovr_summary.txt" 2>/dev/null || echo "0")
-        branch_pct=$(grep -oP 'branches:\s*\K[\d.]+' "${OUT_DIR}/gcovr_summary.txt" 2>/dev/null || echo "N/A")
+
+        # Parse gcovr summary (gcovr 5.x-7.x format: "lines: 92.4% (2948 out of 3191)")
+        stmt_pct=$(grep -oiP 'lines?:?\s*\K[\d.]+(?=%)' "${OUT_DIR}/gcovr_summary.txt" 2>/dev/null | head -1 || echo "N/A")
+        stmt_hit=$(grep -oiP 'lines?:.*?\(\K\d+' "${OUT_DIR}/gcovr_summary.txt" 2>/dev/null | head -1 || echo "0")
+        stmt_total=$(grep -oiP 'lines?:.*?out of \K\d+' "${OUT_DIR}/gcovr_summary.txt" 2>/dev/null | head -1 || echo "0")
+        branch_pct=$(grep -oiP 'branches?:?\s*\K[\d.]+(?=%)' "${OUT_DIR}/gcovr_summary.txt" 2>/dev/null | head -1 || echo "N/A")
+
+        # Fallback: try percentage-only format (gcovr --print-summary -j or compact)
+        if [ "${stmt_pct}" = "N/A" ]; then
+            stmt_pct=$(grep -oiP 'line.*?coverage.*?\K[\d.]+(?=%)' "${OUT_DIR}/gcovr_summary.txt" 2>/dev/null | head -1 || echo "N/A")
+        fi
+        if [ "${branch_pct}" = "N/A" ]; then
+            branch_pct=$(grep -oiP 'branch.*?coverage.*?\K[\d.]+(?=%)' "${OUT_DIR}/gcovr_summary.txt" 2>/dev/null | head -1 || echo "N/A")
+        fi
     else
         stmt_pct="N/A"
         branch_pct="N/A"
