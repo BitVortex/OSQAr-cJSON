@@ -106,22 +106,40 @@ if not _NO_DIAGRAMS:
     env_jar = os.environ.get("PLANTUML_JAR")
     if env_jar and Path(env_jar).is_file():
         plantuml = f'java -jar "{env_jar}"'
-    # Prefer the plantuml command if available (apt-installed)
-    elif shutil.which("plantuml"):
-        plantuml = "plantuml"
-    elif shutil.which("java"):
-        for jar_path in (
-            "/opt/data/home/opt/plantuml.jar",
-            "/opt/plantuml/plantuml.jar",
-            "/usr/share/plantuml/plantuml.jar",
-            "/usr/local/opt/plantuml/libexec/plantuml.jar",
-        ):
-            if Path(jar_path).is_file():
-                plantuml = f'java -jar "{jar_path}"'
-                break
+        print(f"✓ Using PLANTUML JAR from environment: {env_jar}")
+    elif env_jar:
+        print(f"! PLANTUML_JAR is set but not found at: {env_jar}; falling back")
+
+    if "plantuml" not in globals() and "plantuml_server" not in globals():
+        if shutil.which("plantuml"):
+            plantuml = "plantuml"
+            print("✓ Using system 'plantuml' command")
+        elif shutil.which("java"):
+            jar_paths = [
+                "/opt/data/home/opt/plantuml.jar",
+                "/opt/plantuml/plantuml.jar",
+                "/usr/share/plantuml/plantuml.jar",
+                "/usr/local/opt/plantuml/libexec/plantuml.jar",
+            ]
+            for jar_path in jar_paths:
+                try:
+                    subprocess.run(
+                        ["java", "-jar", jar_path, "-version"],
+                        capture_output=True,
+                        timeout=5,
+                    )
+                    plantuml = f'java -jar "{jar_path}"'
+                    print(f"✓ Using PlantUML JAR: {jar_path}")
+                    break
+                except (
+                    subprocess.CalledProcessError,
+                    subprocess.TimeoutExpired,
+                    FileNotFoundError,
+                ):
+                    continue
+            else:
+                plantuml_server = "https://www.plantuml.com/plantuml"
+                print("! PlantUML JAR not found; using web service")
         else:
-            plantuml = "https://www.plantuml.com/plantuml"
-            plantuml_output_format = "png"
-    else:
-        plantuml = "https://www.plantuml.com/plantuml"
-        plantuml_output_format = "png"
+            plantuml_server = "https://www.plantuml.com/plantuml"
+            print("! PlantUML and Java not found; using web service (requires internet)")
