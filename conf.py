@@ -106,6 +106,9 @@ if not _NO_DIAGRAMS:
     env_jar = os.environ.get("PLANTUML_JAR")
     if env_jar and Path(env_jar).is_file():
         plantuml = f'java -jar "{env_jar}"'
+    # Prefer the plantuml command if available (apt-installed)
+    elif shutil.which("plantuml"):
+        plantuml = "plantuml"
     elif shutil.which("java"):
         for jar_path in (
             "/opt/data/home/opt/plantuml.jar",
