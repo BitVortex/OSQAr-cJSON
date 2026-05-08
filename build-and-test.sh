@@ -250,27 +250,23 @@ run_coverage() {
     # Use lcov to aggregate coverage across all test binaries.
     cd "${CJSON_DIR}/tests"
     if command -v lcov &>/dev/null; then
-        # Collect coverage from all test binary gcda files in build/
         lcov -c -d "${CJSON_DIR}/build" -o "${OUT_DIR}/coverage.info" \
-            --rc lcov_branch_coverage=1 \
+            --rc branch_coverage=1 \
             --ignore-errors source 2>&1 || true
-        # Extract only cJSON source files
         lcov -e "${OUT_DIR}/coverage.info" '*/cJSON.c' '*/cJSON_Utils.c' \
             -o "${OUT_DIR}/coverage_filtered.info" \
             --ignore-errors source 2>&1 || true
-        # Generate summary
         lcov --summary "${OUT_DIR}/coverage_filtered.info" \
             > "${OUT_DIR}/lcov_summary.txt" 2>&1 || true
         # Parse: "lines......: 81.2% (1234 of 1519 lines)"
-        stmt_pct=$(grep -oP 'lines\.*:\s*\K[\d.]+(?=%)' "${OUT_DIR}/lcov_summary.txt" 2>/dev/null | head -1 || echo "N/A")
-        stmt_hit=$(grep -oP 'lines\.*:.*\(\K\d+' "${OUT_DIR}/lcov_summary.txt" 2>/dev/null | head -1 || echo "0")
-        stmt_total=$(grep -oP 'lines\.*:.*of \K\d+' "${OUT_DIR}/lcov_summary.txt" 2>/dev/null | head -1 || echo "0")
-        if [ "${stmt_pct}" = "N/A" ]; then
-            # gcov fallback below
-            stmt_pct=""
-        fi
+        stmt_pct=$(grep -oP 'lines[.\s]*:\s*\K[\d.]+(?=%)' "${OUT_DIR}/lcov_summary.txt" 2>/dev/null | head -1)
+        stmt_hit=$(grep -oP 'lines[.\s]*:.*\(\K\d+' "${OUT_DIR}/lcov_summary.txt" 2>/dev/null | head -1)
+        stmt_total=$(grep -oP 'lines[.\s]*:.*of \K\d+' "${OUT_DIR}/lcov_summary.txt" 2>/dev/null | head -1)
+        [ -z "${stmt_pct}" ] && stmt_pct="N/A"
+        [ -z "${stmt_hit}" ] && stmt_hit="0"
+        [ -z "${stmt_total}" ] && stmt_total="0"
     else
-        stmt_pct=""
+        stmt_pct="N/A"  # trigger fallback
     fi
 
     # Fallback: raw gcov on individual .gcno files
