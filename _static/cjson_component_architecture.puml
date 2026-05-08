@@ -1,5 +1,4 @@
 @startuml cjson_component_architecture
-!theme plain
 skinparam backgroundColor #FEFEFE
 skinparam defaultFontSize 12
 

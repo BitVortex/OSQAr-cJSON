@@ -1,5 +1,4 @@
 @startuml cjson_parser_flow
-!theme plain
 skinparam backgroundColor #FEFEFE
 skinparam defaultFontSize 11
 
