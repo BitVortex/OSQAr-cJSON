@@ -247,45 +247,59 @@ run_coverage() {
     # ── Extract coverage from test binary .gcno/.gcda files ────────────
     # Coverage for statically-linked cJSON functions is recorded in the
     # process's .gcda files (test binaries), not the library objects.
-    # Run gcov from tests/ so ../cJSON.c paths resolve correctly.
+    # Use lcov to aggregate coverage across all test binaries.
     cd "${CJSON_DIR}/tests"
-    # Pick one test binary's gcno as the entry point — it contains
-    # coverage for all linked translation units including cJSON.c
-    local test_gcno="${CJSON_DIR}/build/parse_examples-parse_examples.gcno"
-    if [ -f "${test_gcno}" ]; then
-        gcov -b -o "${CJSON_DIR}/build" "${test_gcno}" \
-            > "${OUT_DIR}/gcov_cjson.txt" 2>&1 || true
+    if command -v lcov &>/dev/null; then
+        # Collect coverage from all test binary gcda files in build/
+        lcov -c -d "${CJSON_DIR}/build" -o "${OUT_DIR}/coverage.info" \
+            --rc lcov_branch_coverage=1 \
+            --ignore-errors source 2>&1 || true
+        # Extract only cJSON source files
+        lcov -e "${OUT_DIR}/coverage.info" '*/cJSON.c' '*/cJSON_Utils.c' \
+            -o "${OUT_DIR}/coverage_filtered.info" \
+            --ignore-errors source 2>&1 || true
+        # Generate summary
+        lcov --summary "${OUT_DIR}/coverage_filtered.info" \
+            > "${OUT_DIR}/lcov_summary.txt" 2>&1 || true
+        # Parse: "lines......: 81.2% (1234 of 1519 lines)"
+        stmt_pct=$(grep -oP 'lines\.*:\s*\K[\d.]+(?=%)' "${OUT_DIR}/lcov_summary.txt" 2>/dev/null | head -1 || echo "N/A")
+        stmt_hit=$(grep -oP 'lines\.*:.*\(\K\d+' "${OUT_DIR}/lcov_summary.txt" 2>/dev/null | head -1 || echo "0")
+        stmt_total=$(grep -oP 'lines\.*:.*of \K\d+' "${OUT_DIR}/lcov_summary.txt" 2>/dev/null | head -1 || echo "0")
+        if [ "${stmt_pct}" = "N/A" ]; then
+            # gcov fallback below
+            stmt_pct=""
+        fi
+    else
+        stmt_pct=""
     fi
-    # Also process cJSON_Utils from a test that exercises it
-    local utils_gcno="${CJSON_DIR}/build/json_patch_tests-json_patch_tests.gcno"
-    if [ -f "${utils_gcno}" ]; then
-        gcov -b -o "${CJSON_DIR}/build" "${utils_gcno}" \
-            > "${OUT_DIR}/gcov_utils.txt" 2>&1 || true
-    fi
-    # Stay in tests/ for parsing (gcov output files are written to CWD)
 
-    # Extract real coverage numbers — parse gcov output files in tests/
-    if [ -f "cJSON.c.gcov" ]; then
-        cjson_exec=$(grep -cE '^[[:space:]]+[0-9]+:' cJSON.c.gcov 2>/dev/null || true)
-        cjson_total=$(grep -cE '^[[:space:]]+([0-9]+|#####):' cJSON.c.gcov 2>/dev/null || true)
-    else
-        cjson_exec=0; cjson_total=0
-    fi
-    if [ -f "cJSON_Utils.c.gcov" ]; then
-        utils_exec=$(grep -cE '^[[:space:]]+[0-9]+:' cJSON_Utils.c.gcov 2>/dev/null || true)
-        utils_total=$(grep -cE '^[[:space:]]+([0-9]+|#####):' cJSON_Utils.c.gcov 2>/dev/null || true)
-    else
-        utils_exec=0; utils_total=0
-    fi
-    # Ensure values are clean integers (no newlines, no empty strings)
-    stmt_hit=$((cjson_exec + utils_exec))
-    stmt_total=$((cjson_total + utils_total))
-    if [ "${stmt_total}" -gt 0 ]; then
-        stmt_pct=$(python3 -c "print(round(${stmt_hit}*100/${stmt_total}, 1))")
-    else
+    # Fallback: raw gcov on individual .gcno files
+    if [ -z "${stmt_pct}" ]; then
         stmt_pct="N/A"
+        stmt_hit="0"
+        stmt_total="0"
+        # Try gcov (unreliable merge, but better than nothing)
+        for gcno in "${CJSON_DIR}/build/"*-*.gcno; do
+            [ -f "$gcno" ] && gcov -b -o "${CJSON_DIR}/build" "$gcno" >/dev/null 2>&1 || true
+        done
+        if [ -f "cJSON.c.gcov" ]; then
+            cjson_exec=$(grep -cE '^[[:space:]]+[0-9]+:' cJSON.c.gcov 2>/dev/null || true)
+            cjson_total=$(grep -cE '^[[:space:]]+([0-9]+|#####):' cJSON.c.gcov 2>/dev/null || true)
+        else
+            cjson_exec=0; cjson_total=0
+        fi
+        if [ -f "cJSON_Utils.c.gcov" ]; then
+            utils_exec=$(grep -cE '^[[:space:]]+[0-9]+:' cJSON_Utils.c.gcov 2>/dev/null || true)
+            utils_total=$(grep -cE '^[[:space:]]+([0-9]+|#####):' cJSON_Utils.c.gcov 2>/dev/null || true)
+        else
+            utils_exec=0; utils_total=0
+        fi
+        stmt_hit=$((cjson_exec + utils_exec))
+        stmt_total=$((cjson_total + utils_total))
+        if [ "${stmt_total}" -gt 0 ]; then
+            stmt_pct=$(python3 -c "print(round(${stmt_hit}*100/${stmt_total}, 1))")
+        fi
     fi
-    branch_pct="N/A"  # gcov branch parsing is unreliable; omit
 
     # Build coverage report from gcovr data
     cat > "${SCRIPT_DIR}/coverage_report.txt" <<REPORT
