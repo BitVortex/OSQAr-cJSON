@@ -4,8 +4,9 @@
 #
 # Runs the actual cJSON Unity test suite (not the demo test.c).
 # Generates real JUnit XML, gcov coverage, lizard complexity.
+# Verifies reproducible builds via dual-build + bit-for-bit comparison.
 #
-# Usage: ./build-and-test.sh [build|test|sanitizer|coverage|complexity|static-analysis|all]
+# Usage: ./build-and-test.sh [build|test|sanitizer|coverage|complexity|static-analysis|reproducible|all]
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -368,6 +369,142 @@ warn_audit() {
     fi
 }
 
+# ── Reproducible Build Verification ──────────────────────────────────
+run_reproducible() {
+    echo "--- Reproducible Build Verification ---"
+
+    local RPT="${OUT_DIR}/reproducible_report.txt"
+    local BUILD1_DIR="${CJSON_DIR}/build_repro1"
+    local BUILD2_DIR="${CJSON_DIR}/build_repro2"
+
+    # ── 1. Record build environment ──────────────────────────────────
+    {
+        echo "Reproducible Build Report — cJSON v${VERSION}"
+        echo "==============================================="
+        echo ""
+        echo "Date: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+        echo "Hostname: $(hostname)"
+        echo "Kernel: $(uname -s -r -m)"
+        echo "OS: $(cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d= -f2 | tr -d '\"' || uname -s)"
+        echo ""
+        echo "Compiler:"
+        echo "  Path:     $(which ${CC})"
+        echo "  Version:  $(${CC} --version | head -1)"
+        echo "  CSTD:     ${CSTD}"
+        echo "  Flags:    ${WARN_FLAGS}"
+        echo "  Opt:      -O2"
+        echo ""
+        echo "SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH:-0}"
+        echo ""
+    } > "${RPT}"
+
+    # ── 2. Compile check: does cJSON embed __DATE__/__TIME__? ────────
+    cd "${CJSON_DIR}"
+    local embeds_ts=0
+    if strings cJSON.c 2>/dev/null | grep -qE '__DATE__|__TIME__|__TIMESTAMP__'; then
+        embeds_ts=1
+    fi
+    {
+        echo "Embedded timestamps in source: $([[ ${embeds_ts} -eq 0 ]] && echo "NO — source does not use __DATE__/__TIME__/__TIMESTAMP__ macros" || echo "YES — source contains timestamp macros (mitigated by SOURCE_DATE_EPOCH)")"
+        echo ""
+    } >> "${RPT}"
+
+    # ── 3. Build 1 ─────────────────────────────────────────────────────
+    echo "  Build 1..."
+    export SOURCE_DATE_EPOCH=0
+    mkdir -p "${BUILD1_DIR}"
+    ${CC} -std=${CSTD} ${WARN_FLAGS} -O2 -c cJSON.c -o "${BUILD1_DIR}/cJSON.o"
+    local cjson_utils_built=0
+    if [ -f cJSON_Utils.c ]; then
+        ${CC} -std=${CSTD} ${WARN_FLAGS} -O2 -I. -c cJSON_Utils.c -o "${BUILD1_DIR}/cJSON_Utils.o" 2>/dev/null && cjson_utils_built=1 || true
+    fi
+    # Archive too (some flags embed in .a header but should be deterministic)
+    if [ ${cjson_utils_built} -eq 1 ]; then
+        ar rcs "${BUILD1_DIR}/libcjson.a" "${BUILD1_DIR}/cJSON.o" "${BUILD1_DIR}/cJSON_Utils.o"
+    else
+        ar rcs "${BUILD1_DIR}/libcjson.a" "${BUILD1_DIR}/cJSON.o"
+    fi
+
+    # ── 4. Build 2 (independent, after cleaning) ────────────────────────
+    echo "  Build 2..."
+    # Clean the build1 .o from CJSON_DIR in case any state leaks
+    # (build2 uses build_repro2/ dir — same isolation)
+    sleep 1  # ensure any sub-second timestamps differ (only matters for ar header)
+    mkdir -p "${BUILD2_DIR}"
+    ${CC} -std=${CSTD} ${WARN_FLAGS} -O2 -c cJSON.c -o "${BUILD2_DIR}/cJSON.o"
+    if [ -f cJSON_Utils.c ]; then
+        ${CC} -std=${CSTD} ${WARN_FLAGS} -O2 -I. -c cJSON_Utils.c -o "${BUILD2_DIR}/cJSON_Utils.o" 2>/dev/null || true
+    fi
+    if [ ${cjson_utils_built} -eq 1 ]; then
+        ar rcs "${BUILD2_DIR}/libcjson.a" "${BUILD2_DIR}/cJSON.o" "${BUILD2_DIR}/cJSON_Utils.o"
+    else
+        ar rcs "${BUILD2_DIR}/libcjson.a" "${BUILD2_DIR}/cJSON.o"
+    fi
+
+    # ── 5. Compute checksums ────────────────────────────────────────────
+    echo "  Computing checksums..."
+    {
+        echo "Build 1 checksums:"
+        sha256sum "${BUILD1_DIR}/cJSON.o" | awk '{printf "%s  %s\n", $1, "cJSON.o"}'
+        [ -f "${BUILD1_DIR}/cJSON_Utils.o" ] && sha256sum "${BUILD1_DIR}/cJSON_Utils.o" | awk '{printf "%s  %s\n", $1, "cJSON_Utils.o"}'
+        sha256sum "${BUILD1_DIR}/libcjson.a" | awk '{printf "%s  %s\n", $1, "libcjson.a"}'
+        echo ""
+        echo "Build 2 checksums:"
+        sha256sum "${BUILD2_DIR}/cJSON.o" | awk '{printf "%s  %s\n", $1, "cJSON.o"}'
+        [ -f "${BUILD2_DIR}/cJSON_Utils.o" ] && sha256sum "${BUILD2_DIR}/cJSON_Utils.o" | awk '{printf "%s  %s\n", $1, "cJSON_Utils.o"}'
+        sha256sum "${BUILD2_DIR}/libcjson.a" | awk '{printf "%s  %s\n", $1, "libcjson.a"}'
+        echo ""
+    } >> "${RPT}"
+
+    # ── 6. Compare ──────────────────────────────────────────────────────
+    local all_match=1
+    local mismatch_details=""
+    {
+        echo "Comparison:"
+    } >> "${RPT}"
+
+    for obj in cJSON.o cJSON_Utils.o libcjson.a; do
+        local f1="${BUILD1_DIR}/${obj}"
+        local f2="${BUILD2_DIR}/${obj}"
+        if [ -f "${f1}" ] && [ -f "${f2}" ]; then
+            local h1 h2
+            h1=$(sha256sum "${f1}" | awk '{print $1}')
+            h2=$(sha256sum "${f2}" | awk '{print $1}')
+            if [ "${h1}" = "${h2}" ]; then
+                echo "  ${obj}: MATCH (${h1:0:16}...)" >> "${RPT}"
+                echo "  ${obj}: MATCH"
+            else
+                all_match=0
+                echo "  ${obj}: MISMATCH" >> "${RPT}"
+                echo "    Build1: ${h1}" >> "${RPT}"
+                echo "    Build2: ${h2}" >> "${RPT}"
+                mismatch_details+="  ${obj}: MISMATCH (${h1:0:16}... vs ${h2:0:16}...)\n"
+                echo "  ${obj}: MISMATCH!"
+            fi
+        fi
+    done
+
+    {
+        echo ""
+        if [ ${all_match} -eq 1 ]; then
+            echo "VERDICT: PASS — Build is reproducible (bit-identical across independent builds)"
+        else
+            echo "VERDICT: FAIL — Artifacts differ between builds"
+        fi
+        echo ""
+    } >> "${RPT}"
+
+    echo "  reproducible_report.txt written"
+
+    if [ ${all_match} -eq 1 ]; then
+        echo "  Reproducible build: PASS"
+        return 0
+    else
+        echo -e "  Reproducible build: FAIL\n${mismatch_details}"
+        return 1
+    fi
+}
+
 # ── Main dispatch ────────────────────────────────────────────────────
 case "${ACTION}" in
     build)
@@ -388,6 +525,9 @@ case "${ACTION}" in
     static-analysis)
         run_static_analysis
         ;;
+    reproducible)
+        run_reproducible
+        ;;
     all)
         build_lib && build_unity && run_test_suite release
         run_sanitizer
@@ -395,6 +535,7 @@ case "${ACTION}" in
         run_complexity
         warn_audit
         run_static_analysis
+        run_reproducible
         echo "=== Pipeline complete ==="
         echo "Artifacts:"
         echo "  ${SCRIPT_DIR}/test_results.xml"
@@ -403,9 +544,10 @@ case "${ACTION}" in
         echo "  ${OUT_DIR}/asan_report.txt"
         echo "  ${OUT_DIR}/warn_audit_cjson.txt"
         echo "  ${OUT_DIR}/cppcheck_report.xml"
+        echo "  ${OUT_DIR}/reproducible_report.txt"
         ;;
     *)
-        echo "Usage: $0 [build|test|sanitizer|coverage|complexity|static-analysis|all]"
+        echo "Usage: $0 [build|test|sanitizer|coverage|complexity|static-analysis|reproducible|all]"
         exit 1
         ;;
 esac

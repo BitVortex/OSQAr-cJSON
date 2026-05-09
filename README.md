@@ -101,16 +101,16 @@ osqar traceability _build/html/needs.json \
 | 6 | Coverage measurement (gcov/gcovr) | ✅ In pipeline |
 | 7 | Complexity analysis (lizard, McCabe) | ✅ In pipeline |
 | 8 | Static analysis (cppcheck) | ✅ In pipeline |
+| 9 | Reproducible build verification | ✅ Bit-identical (SHA256) |
 
 ### Planned — tracked as GitHub issues
 
 | # | Activity | Issue |
 |---|----------|-------|
-| 9 | Valgrind/Memcheck | [#5](https://github.com/BitVortex/OSQAr-cJSON/issues/5) |
-| 10 | Fuzzing campaign (AFL++/libFuzzer, 24h) | [#6](https://github.com/BitVortex/OSQAr-cJSON/issues/6) |
-| 11 | MISRA C:2012 compliance | [#7](https://github.com/BitVortex/OSQAr-cJSON/issues/7) — commercial tool |
-| 12 | MC/DC coverage (ASIL D) | [#8](https://github.com/BitVortex/OSQAr-cJSON/issues/8) — commercial tool |
-| 13 | RFC conformance (independent validator) | [#9](https://github.com/BitVortex/OSQAr-cJSON/issues/9) |
-| 14 | Reproducible build verification | [#10](https://github.com/BitVortex/OSQAr-cJSON/issues/10) |
+| 10 | Valgrind/Memcheck | [#5](https://github.com/BitVortex/OSQAr-cJSON/issues/5) |
+| 11 | Fuzzing campaign (AFL++/libFuzzer, 24h) | [#6](https://github.com/BitVortex/OSQAr-cJSON/issues/6) |
+| 12 | MISRA C:2012 compliance | [#7](https://github.com/BitVortex/OSQAr-cJSON/issues/7) — commercial tool |
+| 13 | MC/DC coverage (ASIL D) | [#8](https://github.com/BitVortex/OSQAr-cJSON/issues/8) — commercial tool |
+| 14 | RFC conformance (independent validator) | [#9](https://github.com/BitVortex/OSQAr-cJSON/issues/9) |
 
 Gaps are documented with structured status/reason/mitigation in `osqar_project.json` → `verification.gaps` (OSQAr v0.7.1 feature) and rendered in the Sphinx HTML documentation per ISO 26262-8 §11.4.8.

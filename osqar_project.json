@@ -48,6 +48,12 @@
         "label": "Compiler Warning Audit (-Werror)",
         "command": "./build-and-test.sh all",
         "report": "_build/evidence/warn_audit_*.txt"
+      },
+      {
+        "id": "reproducible-build",
+        "label": "Reproducible Build Verification",
+        "command": "./build-and-test.sh reproducible",
+        "report": "_build/evidence/reproducible_report.txt"
       }
     ],
     "gaps": {
@@ -85,13 +91,6 @@
         "reason": "schedule_constraint",
         "description": "Full validation of cJSON output against RFC 8259 (JSON), RFC 6902 (JSON Patch), and RFC 6901 (JSON Pointer) using an independent JSON schema validator across all test vectors.",
         "mitigation": "cJSON's test suite includes dedicated RFC test files (json-patch-tests/ and tests/). Output is validated against expected values but not against an independent schema validator. The parser is widely used in production (10,000+ GitHub stars) providing de-facto RFC conformance."
-      },
-      "reproducible-build": {
-        "activity": "Reproducible Build Verification",
-        "status": "planned",
-        "reason": "schedule_constraint",
-        "description": "Build cJSON twice from source with SOURCE_DATE_EPOCH and compare binaries bit-for-bit to confirm build reproducibility.",
-        "mitigation": "cJSON is a single C file with zero dependencies, making it inherently reproducible. The build system uses fixed compiler flags. SOURCE_DATE_EPOCH-based reproducibility will be verified in a subsequent qualification iteration."
       }
     }
   }
