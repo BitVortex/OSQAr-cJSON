@@ -8,14 +8,37 @@ Two rendered views of the safety case are provided:
 - **PlantUML** (embedded live): approximate GSN shapes (strategy → hexagon); no extra dependencies beyond CI's ``plantuml`` package.
 - **gsn2x** (pre-rendered SVG): formally correct GSN per the GSN Community Standard, with proper strategy parallelograms and context side-connectors. Rendered via `jonasthewolf/gsn2x <https://github.com/jonasthewolf/gsn2x>`_ v4.3.1.
 
-.. plantuml:: _static/gsn_safety_case.puml
-   :caption: GSN Safety Case — cJSON v1.7.19 SEooC (ISO 26262-10:2025) — PlantUML rendering
-   :align: center
+.. container:: gsn-figure
 
-.. image:: _static/gsn_safety_case.svg
-   :alt: GSN Safety Case — cJSON v1.7.19 (formally correct gsn2x rendering)
-   :align: center
-   :width: 100%
+   .. plantuml:: _static/gsn_safety_case.puml
+      :caption: GSN Safety Case — cJSON v1.7.19 SEooC (ISO 26262-10:2025) — PlantUML rendering
+      :align: center
+
+.. container:: gsn-figure
+
+   .. image:: _static/gsn_safety_case.svg
+      :alt: GSN Safety Case — cJSON v1.7.19 (formally correct gsn2x rendering)
+      :align: center
+      :width: 100%
+      :target: _static/gsn_safety_case.svg
+
+.. raw:: html
+
+   <script>
+   // Make GSN figures open full-size in new tab on click
+   document.addEventListener('DOMContentLoaded', function() {
+     document.querySelectorAll('.gsn-figure img').forEach(function(img) {
+       img.style.cursor = 'zoom-in';
+       img.title = 'Click to open full size in new tab';
+       img.addEventListener('click', function(e) {
+         // Use the :target link if available, otherwise the image src
+         var link = img.closest('a');
+         window.open(link ? link.href : img.src, '_blank');
+         e.preventDefault();
+       });
+     });
+   });
+   </script>
 
 The following safety case is structured using the Goal Structuring Notation (GSN)
 and targets ISO 26262-10:2025 SEooC qualification of cJSON v1.7.19 for ASIL D
