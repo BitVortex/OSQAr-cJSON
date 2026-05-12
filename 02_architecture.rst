@@ -33,9 +33,11 @@ Architecture — cJSON Qualification
 Component Architecture (PlantUML)
 ------------------------------------
 
-.. plantuml:: _static/cjson_component_architecture.puml
-   :alt: cJSON v1.7.19 Component Architecture Diagram
-   :align: center
+.. container:: gsn-figure
+
+   .. plantuml:: _static/cjson_component_architecture.puml
+      :alt: cJSON v1.7.19 Component Architecture Diagram
+      :align: center
 
 .. need:: Component decomposition: The cJSON core (cJSON.c) contains the Parser (recursive-descent JSON tokenizer and value constructor), Printer (tree-walk JSON serializer to buffer), Memory Management (malloc/free with optional hook replacement), and Object Model (tagged-union cJSON struct with linked-list children for arrays/objects). The cJSON Utils (cJSON_Utils.c) builds on the core with JSON Patch (RFC 6902), JSON Pointer (RFC 6901), and Sort/Merge utilities. All components interface with the C standard library for string and memory operations.
    :id: ARCH_COMPONENT_DECOMPOSITION
@@ -46,16 +48,20 @@ Component Architecture (PlantUML)
 Parser Flow (PlantUML)
 -----------------------
 
-.. plantuml:: _static/cjson_parser_flow.puml
-   :alt: cJSON Parser Flow Sequence Diagram
-   :align: center
+.. container:: gsn-figure
+
+   .. plantuml:: _static/cjson_parser_flow.puml
+      :alt: cJSON Parser Flow Sequence Diagram
+      :align: center
 
 Data Model (PlantUML)
 ----------------------
 
-.. plantuml:: _static/cjson_data_model.puml
-   :alt: cJSON Data Model Class Diagram
-   :align: center
+.. container:: gsn-figure
+
+   .. plantuml:: _static/cjson_data_model.puml
+      :alt: cJSON Data Model Class Diagram
+      :align: center
 
 Safety Architecture — Freedom from Interference
 ------------------------------------------------

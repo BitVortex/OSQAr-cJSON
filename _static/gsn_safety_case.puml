@@ -39,6 +39,14 @@ usecase "**SC_AOU_CONTEXT**\n**SEooC Assumptions of Use (ISO\n26262-10:2025 §6.
 SC_CJSON_SAFE .right.> SC_AOU_CONTEXT : context
 node "**ST1**\nArgument by\n4 safety goals" as ST1 <<strategy>> #FFE0B2
 SC_CJSON_SAFE -down-> ST1 : supported by
+rectangle "**SC_VERIFICATION_COMPLETE**\nAll safety requirements are verified with\nadequate coverage and documented evidence suitable\nfor ISO 26262-8 audit." as SC_VERIFICATION_COMPLETE <<goal>> #C8E6C9
+ST1 -down-> SC_VERIFICATION_COMPLETE
+circle "**VER_CJSON_COMPLE...**\nMeasure cyclomatic complexity of\nall cJSON functions. Functions\nexceeding McCabe 15 shall be\nreviewed and justifications\ndocumented." as VER_CJSON_COMPLEXITY <<solution>> #BBDEFB
+SC_VERIFICATION_COMPLETE .down.> VER_CJSON_COMPLEXITY : evidence
+circle "**VER_CJSON_COVERA...**\nMeasure statement and branch\ncoverage of the test suite on the\ncJSON source. Target: ≥ 90%\nstatement coverage, ≥ 80% branch\ncoverage. Document uncovered\nbranches with safety\njustifications." as VER_CJSON_COVERAGE <<solution>> #BBDEFB
+SC_VERIFICATION_COMPLETE .down.> VER_CJSON_COVERAGE : evidence
+rectangle "**REQ_CJSON_TRACEABILITY**\nAll safety requirements shall be\ntraceable to verification activities,\nand all verification activities shall\nproduce documentation artifacts suitable\nfor ISO 26262-8:2025 Clause 9\n(Verification) audit." as REQ_CJSON_TRACEABILITY <<requirement>> #FFF9C4
+SC_VERIFICATION_COMPLETE .right.> REQ_CJSON_TRACEABILITY : context
 rectangle "**SC_NO_UB**\ncJSON does not invoke undefined behavior for any\ninput, including integer overflow, NULL\ndereference, and malformed data." as SC_NO_UB <<goal>> #C8E6C9
 ST1 -down-> SC_NO_UB
 circle "**VER_CJSON_API**\nVerify NULL-pointer safety by\nconstructing test cases that pass\nNULL to every public API function\nand confirming deterministic error\nreturns." as VER_CJSON_API <<solution>> #BBDEFB
@@ -63,14 +71,6 @@ circle "**VER_CJSON_TEST_S...**\nExecute the full cJSON test suite\n(unit tests 
 SC_PARSE_SAFETY .down.> VER_CJSON_TEST_SUITE : evidence
 rectangle "**REQ_CJSON_PARSE_VALID**\nThe cJSON parser shall accept all valid\nJSON texts as defined by RFC 8259 and\nreject all malformed inputs with a\ndeterministic error state." as REQ_CJSON_PARSE_VALID <<requirement>> #FFF9C4
 SC_PARSE_SAFETY .right.> REQ_CJSON_PARSE_VALID : context
-rectangle "**SC_VERIFICATION_COMPLETE**\nAll safety requirements are verified with\nadequate coverage and documented evidence suitable\nfor ISO 26262-8 audit." as SC_VERIFICATION_COMPLETE <<goal>> #C8E6C9
-ST1 -down-> SC_VERIFICATION_COMPLETE
-circle "**VER_CJSON_COMPLE...**\nMeasure cyclomatic complexity of\nall cJSON functions. Functions\nexceeding McCabe 15 shall be\nreviewed and justifications\ndocumented." as VER_CJSON_COMPLEXITY <<solution>> #BBDEFB
-SC_VERIFICATION_COMPLETE .down.> VER_CJSON_COMPLEXITY : evidence
-circle "**VER_CJSON_COVERA...**\nMeasure statement and branch\ncoverage of the test suite on the\ncJSON source. Target: ≥ 90%\nstatement coverage, ≥ 80% branch\ncoverage. Document uncovered\nbranches with safety\njustifications." as VER_CJSON_COVERAGE <<solution>> #BBDEFB
-SC_VERIFICATION_COMPLETE .down.> VER_CJSON_COVERAGE : evidence
-rectangle "**REQ_CJSON_TRACEABILITY**\nAll safety requirements shall be\ntraceable to verification activities,\nand all verification activities shall\nproduce documentation artifacts suitable\nfor ISO 26262-8:2025 Clause 9\n(Verification) audit." as REQ_CJSON_TRACEABILITY <<requirement>> #FFF9C4
-SC_VERIFICATION_COMPLETE .right.> REQ_CJSON_TRACEABILITY : context
 
 note bottom of SC_CJSON_SAFE
   <color:green>■</color> Goal  <color:orange>⬡</color> Strategy  <color:blue>●</color> Solution  <color:cyan>■</color> Context

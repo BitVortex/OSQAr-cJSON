@@ -22,24 +22,6 @@ Two rendered views of the safety case are provided:
       :width: 100%
       :target: _static/gsn_safety_case.svg
 
-.. raw:: html
-
-   <script>
-   // Make GSN figures open full-size in new tab on click
-   document.addEventListener('DOMContentLoaded', function() {
-     document.querySelectorAll('.gsn-figure img').forEach(function(img) {
-       img.style.cursor = 'zoom-in';
-       img.title = 'Click to open full size in new tab';
-       img.addEventListener('click', function(e) {
-         // Use the :target link if available, otherwise the image src
-         var link = img.closest('a');
-         window.open(link ? link.href : img.src, '_blank');
-         e.preventDefault();
-       });
-     });
-   });
-   </script>
-
 The following safety case is structured using the Goal Structuring Notation (GSN)
 and targets ISO 26262-10:2025 SEooC qualification of cJSON v1.7.19 for ASIL D
 integration. Goals are linked to their supporting strategies, sub-goals, and
