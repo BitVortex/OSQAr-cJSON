@@ -270,13 +270,12 @@ run_coverage() {
         [ -z "${stmt_total}" ] && stmt_total="0"
     else
         stmt_pct="N/A"  # trigger fallback
+        stmt_hit="0"
+        stmt_total="0"
     fi
 
     # Fallback: raw gcov on individual .gcno files
-    if [ -z "${stmt_pct}" ]; then
-        stmt_pct="N/A"
-        stmt_hit="0"
-        stmt_total="0"
+    if [ "${stmt_pct}" = "N/A" ]; then
         # Try gcov (unreliable merge, but better than nothing)
         for gcno in "${CJSON_DIR}/build/"*-*.gcno; do
             [ -f "$gcno" ] && gcov -b -o "${CJSON_DIR}/build" "$gcno" >/dev/null 2>&1 || true
