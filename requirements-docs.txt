@@ -1,7 +1,5 @@
-Sphinx==7.2.*
-sphinx-needs>=2.0
-sphinx-test-reports>=1.0
-sphinxcontrib-plantuml>=0.25
-furo>=2024.8.6
-# OSQAr — installed from git main in CI (pending next PyPI release)
-# osqar==0.8.0
+git+https://github.com/BitVortex/OSQAr.git@main
+# All Sphinx/docs dependencies (sphinx-needs, sphinxcontrib-plantuml, furo,
+# sphinx-test-reports, pyyaml) are pulled transitively by OSQAr.
+# Only install lizard separately — it's an optional OSQAr evidence tool.
+#   pip install lizard

@@ -28,10 +28,8 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq cppcheck gcovr lcov default-jre-headless plantuml
-          python3 -m pip install --upgrade pip
-          python3 -m pip install lizard coverage
-          python3 -m pip install pyyaml
-          python3 -m pip install -r requirements-docs.txt
+          pip install -r requirements-docs.txt
+          pip install lizard
 
       - name: Install gsn2x (formally correct GSN diagram renderer)
         run: |
@@ -40,9 +38,6 @@ jobs:
           chmod +x ~/bin/gsn2x
           echo "$HOME/bin" >> $GITHUB_PATH
           gsn2x --version 2>&1 || echo "gsn2x installed (no --version flag)"
-
-      - name: Install OSQAr CLI (from git main — pending next PyPI release)
-        run: python3 -m pip install git+https://github.com/BitVortex/OSQAr.git@main
 
       - name: Build and test cJSON (qualification pipeline)
         run: |
