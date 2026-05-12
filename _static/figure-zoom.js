@@ -1,13 +1,74 @@
-// OSQAr figure zoom — makes figures in .gsn-figure containers
-// clickable to open full-size in a new tab.
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.gsn-figure img').forEach(function(img) {
-    img.style.cursor = 'zoom-in';
-    img.title = 'Click to open full size in new tab';
-    img.addEventListener('click', function(e) {
-      var link = img.closest('a');
-      window.open(link ? link.href : img.src, '_blank');
-      e.preventDefault();
+// OSQAr figure zoom — click any .gsn-figure container to open
+// a full-viewport lightbox for detailed examination.
+(function() {
+  'use strict';
+
+  function findBestSrc(container) {
+    // PlantUML: <object data="...svg"><img src="...png"></object>
+    var obj = container.querySelector('object[data]');
+    if (obj) return obj.getAttribute('data');
+
+    // Regular image (gsn2x SVG, PNG screenshots, etc.)
+    var img = container.querySelector('img[src]');
+    if (img) return img.getAttribute('src');
+
+    // Wrapped in <a href="...">
+    var link = container.querySelector('a[href]');
+    if (link) return link.getAttribute('href');
+
+    return null;
+  }
+
+  function showLightbox(src) {
+    // Remove any existing lightbox
+    var existing = document.getElementById('osqar-lightbox');
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.id = 'osqar-lightbox';
+    overlay.innerHTML =
+      '<div class="osqar-lightbox-close">&times;</div>' +
+      '<img src="' + src + '" alt="Full-size diagram" />';
+
+    // Event delegation: any click on the overlay closes it
+    overlay.addEventListener('click', function(e) {
+      // Don't close when clicking the image itself (allow right-click → save)
+      if (e.target === overlay || e.target.classList.contains('osqar-lightbox-close')) {
+        overlay.remove();
+      }
     });
-  });
-});
+
+    document.addEventListener('keydown', function escHandler(e) {
+      if (e.key === 'Escape') {
+        overlay.remove();
+        document.removeEventListener('keydown', escHandler);
+      }
+    });
+
+    document.body.appendChild(overlay);
+  }
+
+  function init() {
+    document.querySelectorAll('.gsn-figure').forEach(function(container) {
+      var img = container.querySelector('img');
+      if (img) {
+        img.style.cursor = 'zoom-in';
+        img.title = 'Click for detailed view';
+      }
+      container.style.cursor = 'pointer';
+
+      container.addEventListener('click', function(e) {
+        // Don't intercept clicks on the caption's headerlink
+        if (e.target.classList.contains('headerlink')) return;
+        var src = findBestSrc(container);
+        if (src) showLightbox(src);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
