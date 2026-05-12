@@ -32,6 +32,14 @@ jobs:
           python3 -m pip install lizard coverage
           python3 -m pip install -r requirements-docs.txt
 
+      - name: Install gsn2x (formally correct GSN diagram renderer)
+        run: |
+          mkdir -p ~/bin
+          curl -sL https://github.com/jonasthewolf/gsn2x/releases/download/v4.3.1/gsn2x-Linux -o ~/bin/gsn2x
+          chmod +x ~/bin/gsn2x
+          echo "$HOME/bin" >> $GITHUB_PATH
+          gsn2x --version 2>&1 || echo "gsn2x installed (no --version flag)"
+
       - name: Install OSQAr CLI (from git main — pending next PyPI release)
         run: python3 -m pip install git+https://github.com/BitVortex/OSQAr.git@main
 
@@ -50,13 +58,18 @@ jobs:
           test -f _build/html/index.html
           test -f _build/html/needs.json
 
-      - name: Generate GSN safety case diagram
+      - name: Generate GSN safety case diagrams (PlantUML + gsn2x)
         run: |
-          echo "=== Generating GSN diagram ==="
+          echo "=== Generating GSN diagram (PlantUML) ==="
           osqar gsn generate _build/html/needs.json --output _static/gsn_safety_case.puml
           echo "Generated .puml: $(wc -l < _static/gsn_safety_case.puml) lines"
           grep -q '@startuml' _static/gsn_safety_case.puml && echo "  ✓ Valid PlantUML"
           grep -q '@enduml' _static/gsn_safety_case.puml && echo "  ✓ Valid closing"
+
+          echo "=== Generating GSN diagram (gsn2x — formally correct shapes) ==="
+          osqar gsn generate _build/html/needs.json --backend gsn2x-yaml --output _static/gsn_safety_case.yaml --render
+          test -f _static/gsn_safety_case.svg && echo "  ✓ SVG rendered (formally correct GSN)"
+          echo "  YAML spec: $(wc -l < _static/gsn_safety_case.yaml) lines"
 
       - name: Build Sphinx documentation (second pass — embeds GSN diagram)
         run: |
@@ -166,7 +179,9 @@ jobs:
             - `needs.json` machine-readable traceability export
             - `traceability_report.json` verification report (zero violations)
             - `traceability_matrix.xlsx` spreadsheet-ready traceability matrix
-            - `gsn_safety_case.yaml` GSN safety case specification (10 safety-case needs)
+            - `gsn_safety_case.puml` GSN diagram (PlantUML, embedded in docs)
+            - `gsn_safety_case.svg` GSN diagram (gsn2x, formally correct shapes)
+            - `gsn_safety_case.yaml` GSN specification (machine-readable YAML)
             - `SHA256SUMS` integrity manifest with GPG detached signature
             - cJSON source files (qualification baseline)
             - Test results (JUnit XML), coverage report, complexity analysis
