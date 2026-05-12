@@ -7,6 +7,29 @@ import shutil
 import subprocess
 from pathlib import Path
 
+# ── Copy static assets from OSQAr framework package ─────────────────
+# figure-zoom.js and furo-fixes.css are maintained in the OSQAr repo.
+# Copy them into _static/ so html_js_files / html_css_files find them.
+_STATIC_DIR = Path(__file__).parent / "_static"
+_STATIC_DIR.mkdir(exist_ok=True)
+
+def _copy_framework_asset(name: str) -> None:
+    """Copy *name* from the installed osqar_data package into _static/."""
+    try:
+        from importlib.resources import files as _resource_files
+        _src = _resource_files("osqar_data").joinpath("static", name)
+        if _src.is_file():
+            _dst = _STATIC_DIR / name
+            _content = _src.read_text(encoding="utf-8")
+            if not _dst.exists() or _dst.read_text(encoding="utf-8") != _content:
+                _dst.write_text(_content, encoding="utf-8")
+    except Exception:
+        pass  # best-effort — docs build without zoom if OSQAr not installed
+
+_copy_framework_asset("figure-zoom.js")
+_copy_framework_asset("furo-fixes.css")
+# ──────────────────────────────────────────────────────────────────────
+
 project = 'cJSON Qualification (OSQAr)'
 author = "K. Schnürschuh (Hermes Agent)"
 copyright = "2026, OSQAr Case Study"
