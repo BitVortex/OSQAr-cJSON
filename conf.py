@@ -15,7 +15,7 @@ extensions = [
     "sphinx_needs",
 ]
 
-# ── PlantUML (conditionally loaded — v0.7.1 OSQAR feature) ──────────
+# ── PlantUML (conditionally loaded — v0.8.0 OSQAR feature) ──────────
 _NO_DIAGRAMS = os.environ.get("OSQAR_NO_DIAGRAMS", "").lower() in ("1", "true")
 if not _NO_DIAGRAMS:
     try:
@@ -56,6 +56,7 @@ needs_types = [
     dict(directive="ver", title="Verification", prefix="VER_", color="#DFCCF1", style="node"),
     dict(directive="impl", title="Implementation", prefix="IMPL_", color="#DCB239", style="node"),
     dict(directive="lm", title="Lifecycle", prefix="LM_", color="#B3C2F2", style="node"),
+    dict(directive="sc", title="Safety Case", prefix="SC_", color="#C0E8D5", style="node"),
 ]
 
 def _ensure_file(path: Path, content: str) -> None:

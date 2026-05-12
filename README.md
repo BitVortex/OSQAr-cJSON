@@ -1,9 +1,9 @@
 # OSQAr-cJSON — ISO 26262 ASIL D SEooC Qualification
 
 [![CI](https://github.com/BitVortex/OSQAr-cJSON/actions/workflows/ci.yml/badge.svg)](https://github.com/BitVortex/OSQAr-cJSON/actions/workflows/ci.yml)
-[![OSQAr](https://img.shields.io/badge/OSQAr-v0.7.1-blue)](https://github.com/BitVortex/OSQAr/releases/tag/v0.7.1)
+[![OSQAr](https://img.shields.io/badge/OSQAr-v0.8.0-blue)](https://github.com/BitVortex/OSQAr/releases/tag/v0.8.0)
 [![cJSON](https://img.shields.io/badge/cJSON-v1.7.19-green)](https://github.com/DaveGamble/cJSON/releases/tag/v1.7.19)
-[![Release](https://img.shields.io/badge/release-1.7.19--0.7.1-orange)](https://github.com/BitVortex/OSQAr-cJSON/releases/tag/1.7.19-0.7.1)
+[![Release](https://img.shields.io/badge/release-1.7.19--0.8.0-orange)](https://github.com/BitVortex/OSQAr-cJSON/releases/tag/1.7.19-0.8.0)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-brightgreen)](https://bitvortex.github.io/OSQAr-cJSON/)
 
 > ⚠️ **RESEARCH REPOSITORY — NO WARRANTY**  
@@ -17,28 +17,33 @@ cJSON v1.7.19 qualified as an ISO 26262 ASIL D Safety Element out of Context (SE
 
 | Component | Repository | Pinned Version |
 |-----------|-----------|---------------|
-| **OSQAr** | [BitVortex/OSQAr](https://github.com/BitVortex/OSQAr) | [`v0.7.1`](https://github.com/BitVortex/OSQAr/releases/tag/v0.7.1) |
+| **OSQAr** | [BitVortex/OSQAr](https://github.com/BitVortex/OSQAr) | [`v0.8.0`](https://github.com/BitVortex/OSQAr/releases/tag/v0.8.0) |
 | **cJSON** | [DaveGamble/cJSON](https://github.com/DaveGamble/cJSON) | [`v1.7.19`](https://github.com/DaveGamble/cJSON/releases/tag/v1.7.19) |
 
 ## Releases
 
-Tagged releases follow the format **`cjson_version-osqar_version`** (e.g., `1.7.19-0.7.1`). Each release is a CI-generated auditable shipment containing:
+Tagged releases follow the format **`cjson_version-osqar_version`** (e.g., `1.7.19-0.8.0`). Each release is a CI-generated auditable shipment containing:
 
 | Asset | Description |
 |-------|------------|
-| `osqar_cjson_shipment.zip` | Full evidence bundle: Sphinx HTML docs, `needs.json`, `traceability_report.json`, `SHA256SUMS`, test results, coverage, complexity, sanitizer logs, cJSON source baseline |
+| `osqar_cjson_shipment.zip` | Full evidence bundle: Sphinx HTML docs, `needs.json`, `traceability_report.json`, `SHA256SUMS` + GPG signature, `traceability_matrix.xlsx`, `gsn_safety_case.yaml`, test results, coverage, complexity, sanitizer logs, cJSON source baseline |
 | `osqar_cjson_shipment.zip.sha256` | SHA-256 of the shipment ZIP for downstream integrity verification |
 
 **[Latest release →](https://github.com/BitVortex/OSQAr-cJSON/releases/latest)**
 
 ## Qualification Summary
 
-- **45 needs** across 6 documents: 12 requirements, 7 architecture elements, 14 verification activities, 6 lifecycle items
-- **56 bidirectional links**, **zero traceability violations** — verified via `osqar traceability --test-prefix VER_ --code-prefix IMPL_`
+- **55 needs** across 7 documents: 12 requirements, 7 architecture elements, 14 verification activities, 4 implementation items, 10 safety case items, 8 lifecycle items
+- **GSN safety case** with 4 safety goals argued over parsing safety, memory safety, undefined behavior freedom, and verification completeness — exported as `gsn_safety_case.yaml`
+- **v1.0 requirement baseline** archived via `osqar baseline` for change management
+- **XLSX traceability matrix** exported for spreadsheet-based review
+- **Impact analysis** available on all requirements via `osqar impact`
+- **102 bidirectional links**, **zero traceability violations** — verified via `osqar traceability --test-prefix VER_ --code-prefix IMPL_`
 - **cJSON builds with `-Werror -Wall -Wextra -Wconversion`** — zero warnings across 5,066 LOC
 - **162 Unity tests** across 21 executables — all pass under ASan+UBSan instrumentation
 - **Sphinx HTML** built with PlantUML architecture diagrams, zero warnings
-- **CI pipeline** on every push and tag: build → test → sanitize → coverage → docs → traceability → shipment → release
+- **GPG-signed SHA256SUMS manifest** for shipment integrity verification
+- **CI pipeline** on every push and tag: build → test → sanitize → coverage → docs → traceability → impact → baseline → XLSX → GSN → shipment → release
 
 ## Quickstart
 
@@ -76,6 +81,7 @@ osqar traceability _build/html/needs.json \
 ├── 04_implementation.rst          # Source inventory, build config (IMPL_*)
 ├── 05_test_results.rst            # Test results, coverage, static analysis
 ├── 06_lifecycle_management.rst    # AoUs, CM baseline, issue management (LM_*)
+├── 07_safety_case.rst             # GSN safety case with 10 safety-case needs (SC_*)
 ├── index.rst                      # Master toctree + qualification summary
 ├── conf.py                        # Sphinx config (_NO_DIAGRAMS guard, PlantUML detection)
 ├── osqar_project.json             # Commands + verification.gaps + verification.run
@@ -113,4 +119,4 @@ osqar traceability _build/html/needs.json \
 | 13 | MC/DC coverage (ASIL D) | [#8](https://github.com/BitVortex/OSQAr-cJSON/issues/8) — commercial tool |
 | 14 | RFC conformance (independent validator) | [#9](https://github.com/BitVortex/OSQAr-cJSON/issues/9) |
 
-Gaps are documented with structured status/reason/mitigation in `osqar_project.json` → `verification.gaps` (OSQAr v0.7.1 feature) and rendered in the Sphinx HTML documentation per ISO 26262-8 §11.4.8.
+Gaps are documented with structured status/reason/mitigation in `osqar_project.json` → `verification.gaps` (OSQAr v0.8.0 feature) and rendered in the Sphinx HTML documentation per ISO 26262-8 §11.4.8.

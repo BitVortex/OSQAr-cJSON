@@ -42,3 +42,14 @@ cjson-source/*.gcov
 
 # PDFs are deliverables — always committed
 !*.pdf
+
+# Shipment ZIP artifact (CI-generated, attached to releases)
+osqar_cjson_shipment.zip
+osqar_cjson_shipment.zip.sha256
+
+# GPG keyring (local only)
+*.kbx
+*.gpg
+*.secring
+*.pubring
+trustdb.gpg
