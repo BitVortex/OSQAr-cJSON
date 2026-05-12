@@ -43,10 +43,25 @@ jobs:
           ls -la test_results.xml coverage_report.txt complexity_report.txt 2>/dev/null || true
           ls -la _build/evidence/ 2>/dev/null || true
 
-      - name: Build Sphinx documentation
+      - name: Build Sphinx documentation (first pass — produces needs.json)
+        run: |
+          python3 -m sphinx -b html . _build/html 2>&1 | tail -5
+          echo "=== First Sphinx build OK ==="
+          test -f _build/html/index.html
+          test -f _build/html/needs.json
+
+      - name: Generate GSN safety case diagram
+        run: |
+          echo "=== Generating GSN diagram ==="
+          osqar gsn generate _build/html/needs.json --output _static/gsn_safety_case.puml
+          echo "Generated .puml: $(wc -l < _static/gsn_safety_case.puml) lines"
+          grep -q '@startuml' _static/gsn_safety_case.puml && echo "  ✓ Valid PlantUML"
+          grep -q '@enduml' _static/gsn_safety_case.puml && echo "  ✓ Valid closing"
+
+      - name: Build Sphinx documentation (second pass — embeds GSN diagram)
         run: |
           python3 -m sphinx -b html -W . _build/html
-          echo "=== Sphinx build OK ==="
+          echo "=== Final Sphinx build OK ==="
           test -f _build/html/index.html
           test -f _build/html/needs.json
 
