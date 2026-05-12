@@ -28,7 +28,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq cppcheck gcovr lcov default-jre-headless plantuml
-          pip install -r requirements-docs.txt
+          pip install osqar==0.8.1
           pip install lizard
 
       - name: Install gsn2x (formally correct GSN diagram renderer)
@@ -168,7 +168,7 @@ jobs:
           body: |
             ## cJSON ${{ github.ref_name }} — ISO 26262 ASIL D SEooC Qualification
 
-            Qualified using [OSQAr](https://github.com/BitVortex/OSQAr) v0.8.0.
+            Qualified using [OSQAr](https://github.com/BitVortex/OSQAr) v0.8.1.
 
             **Shipment contents:**
             - Sphinx HTML documentation with full traceability (requirements ↔ architecture ↔ verification)
@@ -183,10 +183,11 @@ jobs:
             - Test results (JUnit XML), coverage report, complexity analysis
             - Sanitizer logs (ASan+UBSan), compiler warning audit
 
-            **v0.8.0 features applied:**
+            **v0.8.1 features applied:**
             | Feature | Status |
             |---|---|
-            | GSN safety case | 4 safety goals, 10 SC_ needs, YAML export |
+            | GSN safety case | 4 safety goals, PlantUML + formally correct gsn2x SVG |
+            | Figure click-to-zoom | Inline lightbox on all diagrams (framework asset) |
             | Baseline snapshot | v1.0 baseline (55 needs) |
             | Impact analysis | Full transitive closure on all REQ_ seeds |
             | XLSX traceability matrix | 12 requirements × 8 columns |

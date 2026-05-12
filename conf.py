@@ -38,7 +38,7 @@ extensions = [
     "sphinx_needs",
 ]
 
-# ── PlantUML (conditionally loaded — v0.8.0 OSQAR feature) ──────────
+# ── PlantUML (conditionally loaded — v0.8.1 OSQAR feature) ──────────
 _NO_DIAGRAMS = os.environ.get("OSQAR_NO_DIAGRAMS", "").lower() in ("1", "true")
 if not _NO_DIAGRAMS:
     try:
