@@ -3,6 +3,10 @@ Goal Structuring Notation — cJSON Safety Case
 
 .. _gsn_overview:
 
+.. plantuml:: _static/gsn_safety_case.puml
+   :caption: GSN Safety Case — cJSON v1.7.19 SEooC (ISO 26262-10:2025)
+   :align: center
+
 The following safety case is structured using the Goal Structuring Notation (GSN)
 and targets ISO 26262-10:2025 SEooC qualification of cJSON v1.7.19 for ASIL D
 integration. Goals are linked to their supporting strategies, sub-goals, and
