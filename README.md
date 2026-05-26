@@ -26,7 +26,7 @@ Tagged releases follow the format **`cjson_version-osqar_version`** (e.g., `1.7.
 
 | Asset | Description |
 |-------|------------|
-| `osqar_cjson_shipment.zip` | Full evidence bundle: Sphinx HTML docs, `needs.json`, `traceability_report.json`, `SHA256SUMS` + GPG signature, `traceability_matrix.xlsx`, `gsn_safety_case.yaml`, test results, coverage, complexity, sanitizer logs, cJSON source baseline |
+| `osqar_cjson_shipment.zip` | Full evidence bundle: Sphinx HTML docs, `needs.json`, `traceability_report.json`, `SHA256SUMS` + GPG signature, `traceability_matrix.xlsx`, test results, coverage, complexity, sanitizer logs, cJSON source baseline |
 | `osqar_cjson_shipment.zip.sha256` | SHA-256 of the shipment ZIP for downstream integrity verification |
 
 **[Latest release →](https://github.com/BitVortex/OSQAr-cJSON/releases/latest)**
@@ -34,7 +34,7 @@ Tagged releases follow the format **`cjson_version-osqar_version`** (e.g., `1.7.
 ## Qualification Summary
 
 - **56 needs** across 7 documents: 12 requirements, 7 architecture elements, 14 verification activities (13 VER_ + 1 TEST_), 4 implementation items, 10 safety case items, 9 lifecycle items
-- **GSN safety case** with 4 safety goals argued over parsing safety, memory safety, undefined behavior freedom, and verification completeness — exported as `gsn_safety_case.yaml`
+- **GSN safety case** with 4 safety goals argued over parsing safety, memory safety, undefined behavior freedom, and verification completeness — rendered via PlantUML in documentation
 - **v1.0 requirement baseline** archived via `osqar baseline` for change management
 - **XLSX traceability matrix** exported for spreadsheet-based review
 - **Impact analysis** available on all requirements via `osqar impact`
@@ -43,7 +43,7 @@ Tagged releases follow the format **`cjson_version-osqar_version`** (e.g., `1.7.
 - **162 Unity tests** across 21 executables — all pass under ASan+UBSan instrumentation
 - **Sphinx HTML** built with PlantUML architecture diagrams, zero warnings
 - **GPG-signed SHA256SUMS manifest** for shipment integrity verification
-- **CI pipeline** on every push and tag: build → test → sanitize → coverage → docs → traceability → impact → baseline → XLSX → GSN → shipment → release
+- **CI pipeline** on every push and tag: build → test → sanitize → coverage → docs → traceability → impact → baseline → XLSX → shipment → release
 
 ## Quickstart
 

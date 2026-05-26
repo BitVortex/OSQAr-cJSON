@@ -138,13 +138,6 @@ Error Detection (TD) to determine the required Tool Confidence Level (TCL).
      - TD1
      - TCL1
      - No qualification required
-   * - gsn2x
-     - 4.3.1
-     - GSN diagram rendering
-     - TI1
-     - TD1
-     - TCL1
-     - No qualification required
    * - Sphinx
      - ≥7.4
      - Documentation generation
