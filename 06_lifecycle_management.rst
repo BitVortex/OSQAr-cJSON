@@ -9,31 +9,31 @@ Lifecycle Management — cJSON Qualification
 Assumptions of Use (AoU)
 -------------------------
 
-.. need:: **AoU-1 (Integration Context):** cJSON is integrated as a stateless library in an ASIL D ECU context. All state is caller-owned (cJSON* pointers). The integrator provides a qualified memory allocator via cJSON_InitHooks.
+.. need:: AoU-1 (Integration Context): cJSON is integrated as a stateless library in an ASIL D ECU context. All state is caller-owned (cJSON* pointers). The integrator provides a qualified memory allocator via cJSON_InitHooks.
    :id: LM_AOU_CONTEXT
    :status: active
    :tags: lifecycle;aou;ASIL_D
    :links: SC_CJSON_SAFE
 
-.. need:: **AoU-2 (Input Constraints):** JSON inputs processed through cJSON shall not exceed CJSON_NESTING_LIMIT (1000) depth. Maximum single string length is bounded by available memory. Inputs originate from a trusted or integrity-checked source (validated at system level before reaching cJSON).
+.. need:: AoU-2 (Input Constraints): JSON inputs processed through cJSON shall not exceed CJSON_NESTING_LIMIT (1000) depth. Maximum single string length is bounded by available memory. Inputs originate from a trusted or integrity-checked source (validated at system level before reaching cJSON).
    :id: LM_AOU_INPUTS
    :status: active
    :tags: lifecycle;aou;ASIL_D
    :links: SC_CJSON_SAFE
 
-.. need:: **AoU-3 (Threading Model):** cJSON is not thread-safe and shall be used from a single thread of control or externally synchronized by the integrator.
+.. need:: AoU-3 (Threading Model): cJSON is not thread-safe and shall be used from a single thread of control or externally synchronized by the integrator.
    :id: LM_AOU_THREADING
    :status: active
    :tags: lifecycle;aou;ASIL_D
    :links: SC_CJSON_SAFE
 
-.. need:: **AoU-4 (Error Handling):** The integrator shall check all cJSON return values for error indicators (NULL from parse/create functions, cJSON_False from boolean returns). Unchecked error paths are the integrator's responsibility.
+.. need:: AoU-4 (Error Handling): The integrator shall check all cJSON return values for error indicators (NULL from parse/create functions, cJSON_False from boolean returns). Unchecked error paths are the integrator's responsibility.
    :id: LM_AOU_ERROR
    :status: active
    :tags: lifecycle;aou;ASIL_D
    :links: SC_CJSON_SAFE
 
-.. need:: **AoU-5 (Toolchain):** The integrator shall reproduce the qualification build with the audited toolchain version and compiler flags. Binary equivalence or semantic equivalence shall be demonstrated.
+.. need:: AoU-5 (Toolchain): The integrator shall reproduce the qualification build with the audited toolchain version and compiler flags. Binary equivalence or semantic equivalence shall be demonstrated.
    :id: LM_AOU_TOOLCHAIN
    :status: active
    :tags: lifecycle;aou;ASIL_D
@@ -59,6 +59,7 @@ Shipment Content
 -----------------
 
 The qualification shipment contains:
+
 1. Requirements document (this project)
 2. Architecture document with PlantUML diagrams
 3. Verification plan and results

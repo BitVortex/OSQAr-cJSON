@@ -50,6 +50,7 @@ Source inventory
      - 
 
 Public API surface: 78 CJSON_PUBLIC functions across core + utils, covering:
+
 - Parsing (6 functions: Parse, ParseWithLength, ParseWithOpts, ParseWithLengthOpts, ParseWithLength, Version)
 - Printing (4 functions: Print, PrintUnformatted, PrintBuffered, PrintPreallocated)
 - Object creation (13 functions: CreateNull, CreateTrue, CreateFalse, CreateBool, CreateNumber, CreateString, CreateRaw, CreateArray, CreateObject, CreateStringReference, CreateObjectReference, CreateArrayReference, CreateIntArray)
