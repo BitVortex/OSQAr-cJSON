@@ -1,0 +1,8 @@
+{
+  "created_at": "2026-05-26T18:35:06+00:00",
+  "message": "Updated baseline: OSQAr v0.9.0 \u2014 56 needs (added TCL assessment)",
+  "needs_count": 56,
+  "needs_file": "needs.json",
+  "schema": "osqar.baseline_manifest.v1",
+  "tag": "v1.1"
+}
