@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # cJSON Qualification Build & Test Pipeline
-# ISO 26262 ASIL D SEooC — OSQAr v0.8.1
+# ISO 26262 ASIL D SEooC — OSQAr v0.9.0
 #
 # Runs the actual cJSON Unity test suite (not the demo test.c).
 # Generates real JUnit XML, gcov coverage, lizard complexity.

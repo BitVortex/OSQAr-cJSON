@@ -1,4 +1,4 @@
-osqar==0.8.1
+osqar==0.9.0
 # All Sphinx/docs dependencies (sphinx-needs, sphinxcontrib-plantuml, furo,
 # sphinx-test-reports, pyyaml) are pulled transitively by OSQAr.
 # Only install lizard separately — it's an optional OSQAr evidence tool.

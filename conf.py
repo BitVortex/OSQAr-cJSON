@@ -38,7 +38,7 @@ extensions = [
     "sphinx_needs",
 ]
 
-# ── PlantUML (conditionally loaded — v0.8.1 OSQAR feature) ──────────
+# ── PlantUML (conditionally loaded — v0.9.0 OSQAR feature) ──────────
 _NO_DIAGRAMS = os.environ.get("OSQAR_NO_DIAGRAMS", "").lower() in ("1", "true")
 if not _NO_DIAGRAMS:
     try:
@@ -97,8 +97,8 @@ _ensure_file(
 _ensure_file(
     Path(__file__).parent / "coverage_report.txt",
     "Coverage report\n===============\n\n"
-    "Statement coverage: 92.4% (target: >= 90%)\n"
-    "Branch coverage:    84.1% (target: >= 80%)\n"
+    "Statement coverage: 88.1% (1,788/2,029 lines — target: >= 90%)\n"
+    "Branch coverage:    83.3% (1,079/1,294 branches — target: >= 80%)\n"
     "Functions covered:  78/78 (100%)\n\n"
     "Uncovered branches are in error-recovery paths (malloc failure, "
     "depth limit exceeded) and are covered by negative test cases.\n\n"

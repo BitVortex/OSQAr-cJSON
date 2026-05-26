@@ -11,7 +11,7 @@ Two rendered views of the safety case are provided:
 .. container:: gsn-figure
 
    .. plantuml:: _static/gsn_safety_case.puml
-      :caption: GSN Safety Case — cJSON v1.7.19 SEooC (ISO 26262-10:2025) — PlantUML rendering
+      :caption: GSN Safety Case — cJSON v1.7.19 SEooC (ISO 26262-10:2018) — PlantUML rendering
       :align: center
 
 .. container:: gsn-figure
@@ -23,7 +23,7 @@ Two rendered views of the safety case are provided:
       :target: _static/gsn_safety_case.svg
 
 The following safety case is structured using the Goal Structuring Notation (GSN)
-and targets ISO 26262-10:2025 SEooC qualification of cJSON v1.7.19 for ASIL D
+and targets ISO 26262-10:2018 SEooC qualification of cJSON v1.7.19 for ASIL D
 integration. Goals are linked to their supporting strategies, sub-goals, and
 solutions (evidence). Context elements capture the Assumptions of Use from
 `Lifecycle Management <06_lifecycle_management>`_.
@@ -100,7 +100,7 @@ Verification Completeness
 Context
 -------
 
-.. sc:: **SEooC Assumptions of Use (ISO 26262-10:2025 §6.4.3):** (1) cJSON is integrated as a stateless library with caller-owned state and a qualified memory allocator provided by the integrator via cJSON_InitHooks. (2) JSON inputs do not exceed CJSON_NESTING_LIMIT (1000) depth; max string length is bounded by available memory; inputs originate from a trusted or integrity-checked source. (3) Single-threaded use or external synchronization by integrator. (4) All cJSON return values are checked by integrator; NULL/cJSON_False indicate errors. (5) Qualification build is reproduced with audited toolchain and compiler flags. See :need:`LM_AOU_CONTEXT`, :need:`LM_AOU_INPUTS`, :need:`LM_AOU_THREADING`, :need:`LM_AOU_ERROR`, :need:`LM_AOU_TOOLCHAIN`.
+.. sc:: **SEooC Assumptions of Use (ISO 26262-10:2018 §6.4.3):** (1) cJSON is integrated as a stateless library with caller-owned state and a qualified memory allocator provided by the integrator via cJSON_InitHooks. (2) JSON inputs do not exceed CJSON_NESTING_LIMIT (1000) depth; max string length is bounded by available memory; inputs originate from a trusted or integrity-checked source. (3) Single-threaded use or external synchronization by integrator. (4) All cJSON return values are checked by integrator; NULL/cJSON_False indicate errors. (5) Qualification build is reproduced with audited toolchain and compiler flags. See :need:`LM_AOU_CONTEXT`, :need:`LM_AOU_INPUTS`, :need:`LM_AOU_THREADING`, :need:`LM_AOU_ERROR`, :need:`LM_AOU_TOOLCHAIN`.
    :id: SC_AOU_CONTEXT
    :status: active
    :tags: safety-case;context;aou

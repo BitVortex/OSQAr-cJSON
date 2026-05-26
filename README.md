@@ -1,9 +1,9 @@
 # OSQAr-cJSON — ISO 26262 ASIL D SEooC Qualification
 
 [![CI](https://github.com/BitVortex/OSQAr-cJSON/actions/workflows/ci.yml/badge.svg)](https://github.com/BitVortex/OSQAr-cJSON/actions/workflows/ci.yml)
-[![OSQAr](https://img.shields.io/badge/OSQAr-v0.8.1-blue)](https://github.com/BitVortex/OSQAr/releases/tag/v0.8.1)
+[![OSQAr](https://img.shields.io/badge/OSQAr-v0.9.0-blue)](https://github.com/BitVortex/OSQAr/releases/tag/v0.9.0)
 [![cJSON](https://img.shields.io/badge/cJSON-v1.7.19-green)](https://github.com/DaveGamble/cJSON/releases/tag/v1.7.19)
-[![Release](https://img.shields.io/badge/release-1.7.19--0.8.1-orange)](https://github.com/BitVortex/OSQAr-cJSON/releases/tag/1.7.19-0.8.1)
+[![Release](https://img.shields.io/badge/release-1.7.19--0.9.0-orange)](https://github.com/BitVortex/OSQAr-cJSON/releases/tag/1.7.19-0.9.0)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-brightgreen)](https://bitvortex.github.io/OSQAr-cJSON/)
 
 > ⚠️ **RESEARCH REPOSITORY — NO WARRANTY**  
@@ -11,18 +11,18 @@
 
 ---
 
-cJSON v1.7.19 qualified as an ISO 26262 ASIL D Safety Element out of Context (SEooC) using the [OSQAr](https://github.com/BitVortex/OSQAr) (Open Safety Qualification Architecture) framework.
+cJSON v1.7.19 qualification attempt targeting ISO 26262 ASIL D as a Safety Element out of Context (SEooC) using the [OSQAr](https://github.com/BitVortex/OSQAr) (Open Safety Qualification Architecture) framework.
 
 ## Referenced Components
 
 | Component | Repository | Pinned Version |
 |-----------|-----------|---------------|
-| **OSQAr** | [BitVortex/OSQAr](https://github.com/BitVortex/OSQAr) | [`v0.8.1`](https://github.com/BitVortex/OSQAr/releases/tag/v0.8.1) |
+| **OSQAr** | [BitVortex/OSQAr](https://github.com/BitVortex/OSQAr) | [`v0.9.0`](https://github.com/BitVortex/OSQAr/releases/tag/v0.9.0) |
 | **cJSON** | [DaveGamble/cJSON](https://github.com/DaveGamble/cJSON) | [`v1.7.19`](https://github.com/DaveGamble/cJSON/releases/tag/v1.7.19) |
 
 ## Releases
 
-Tagged releases follow the format **`cjson_version-osqar_version`** (e.g., `1.7.19-0.8.1`). Each release is a CI-generated auditable shipment containing:
+Tagged releases follow the format **`cjson_version-osqar_version`** (e.g., `1.7.19-0.9.0`). Each release is a CI-generated auditable shipment containing:
 
 | Asset | Description |
 |-------|------------|
@@ -33,7 +33,7 @@ Tagged releases follow the format **`cjson_version-osqar_version`** (e.g., `1.7.
 
 ## Qualification Summary
 
-- **55 needs** across 7 documents: 12 requirements, 7 architecture elements, 14 verification activities, 4 implementation items, 10 safety case items, 8 lifecycle items
+- **56 needs** across 7 documents: 12 requirements, 7 architecture elements, 14 verification activities (13 VER_ + 1 TEST_), 4 implementation items, 10 safety case items, 9 lifecycle items
 - **GSN safety case** with 4 safety goals argued over parsing safety, memory safety, undefined behavior freedom, and verification completeness — exported as `gsn_safety_case.yaml`
 - **v1.0 requirement baseline** archived via `osqar baseline` for change management
 - **XLSX traceability matrix** exported for spreadsheet-based review
