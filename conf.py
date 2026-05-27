@@ -102,6 +102,7 @@ _ensure_file(
     "Functions covered:  78/78 (100%)\n\n"
     "Uncovered branches are in error-recovery paths (malloc failure, "
     "depth limit exceeded) and are covered by negative test cases.\n\n"
+    "Raw evidence: verification/lcov_summary.txt, verification/coverage.info\n\n"
     "Coverage measured with gcov/lcov on the instrumented test build.\n",
 )
 

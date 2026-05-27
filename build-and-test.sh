@@ -280,6 +280,10 @@ run_coverage() {
         for gcno in "${CJSON_DIR}/build/"*-*.gcno; do
             [ -f "$gcno" ] && gcov -b -o "${CJSON_DIR}/build" "$gcno" >/dev/null 2>&1 || true
         done
+        # Save raw gcov output to evidence directory
+        for gcov_file in cJSON.c.gcov cJSON_Utils.c.gcov; do
+            [ -f "${gcov_file}" ] && cp "${gcov_file}" "${OUT_DIR}/${gcov_file%.gcov}.txt"
+        done
         set +e
         if [ -f "cJSON.c.gcov" ]; then
             cjson_exec=$(grep -cE '^[[:space:]]+[0-9]+:' cJSON.c.gcov 2>/dev/null || true)
@@ -317,7 +321,7 @@ Uncovered lines are expected in error-recovery paths:
 - Depth-limit-exceeded branches in parse_array/parse_object
 - Buffer-overflow guard in cJSON_PrintBuffered
 
-Raw gcov output: _build/evidence/gcov_cjson.txt, _build/evidence/gcov_utils.txt
+Raw evidence: verification/lcov_summary.txt, verification/coverage.info
 REPORT
     echo "  coverage_report.txt written (stmt: ${stmt_pct}%)"
 }
