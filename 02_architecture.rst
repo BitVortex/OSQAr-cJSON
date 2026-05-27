@@ -39,11 +39,25 @@ Component Architecture (PlantUML)
       :alt: cJSON v1.7.19 Component Architecture Diagram
       :align: center
 
-.. need:: Component decomposition: The cJSON core (cJSON.c) contains the Parser (recursive-descent JSON tokenizer and value constructor), Printer (tree-walk JSON serializer to buffer), Memory Management (malloc/free with optional hook replacement), and Object Model (tagged-union cJSON struct with linked-list children for arrays/objects). The cJSON Utils (cJSON_Utils.c) builds on the core with JSON Patch (RFC 6902), JSON Pointer (RFC 6901), and Sort/Merge utilities. All components interface with the C standard library for string and memory operations.
+.. need:: Component Decomposition — cJSON Core and Utils
    :id: ARCH_COMPONENT_DECOMPOSITION
    :status: active
    :tags: architecture;decomposition
    :links: REQ_CJSON_PARSE_VALID;ARCH_PARSER_FLOW
+
+   The cJSON core (``cJSON.c``) contains four subsystems:
+
+   - **Parser**: recursive-descent JSON tokenizer and value constructor
+   - **Printer**: tree-walk JSON serializer to buffer
+   - **Memory Management**: malloc/free with optional hook replacement
+   - **Object Model**: tagged-union cJSON struct with linked-list children
+     for arrays/objects
+
+   The cJSON Utils (``cJSON_Utils.c``) builds on the core with JSON Patch
+   (RFC 6902), JSON Pointer (RFC 6901), and Sort/Merge utilities.
+
+   All components interface with the C standard library for string and
+   memory operations.
 
 Parser Flow (PlantUML)
 -----------------------
@@ -66,8 +80,23 @@ Data Model (PlantUML)
 Safety Architecture — Freedom from Interference
 ------------------------------------------------
 
-.. need:: FFI measures: cJSON has no global state (all state is in caller-owned cJSON* objects). Memory allocation hooks enable replacement with a qualified allocator. The API uses bounded stack depth (CJSON_NESTING_LIMIT=1000). No thread synchronization is performed inside the library. Integrator responsibilities: provide a qualified allocator via cJSON_InitHooks, validate all inputs before API calls, check all return values for error indicators, handle error paths at the integration boundary, and ensure inputs respect nesting limits.
+.. need:: Freedom from Interference Measures
    :id: ARCH_FFI_MEASURES
    :status: active
    :tags: architecture;ffi;safety
    :links: REQ_CJSON_STACK_BOUNDED;REQ_CJSON_MEMORY_SAFE
+
+   FFI measures in cJSON:
+
+   - No global state — all state is in caller-owned cJSON* objects
+   - Memory allocation hooks enable replacement with a qualified allocator
+   - Bounded stack depth via CJSON_NESTING_LIMIT (default 1000)
+   - No thread synchronization performed inside the library
+
+   Integrator responsibilities:
+
+   - Provide a qualified allocator via cJSON_InitHooks
+   - Validate all inputs before API calls
+   - Check all return values for error indicators
+   - Handle error paths at the integration boundary
+   - Ensure inputs respect nesting limits

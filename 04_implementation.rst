@@ -1,11 +1,21 @@
 Implementation — cJSON Qualification
 ======================================
 
-.. need:: The qualified cJSON source is taken from the upstream release v1.7.19 (commit tagged in DaveGamble/cJSON). The source consists of two translation units: cJSON.c (core parser/printer/object model, ~3190 LOC) and cJSON_Utils.c (JSON Patch/Pointer/Sort utilities, ~1480 LOC), with public headers cJSON.h and cJSON_Utils.h.
+.. need:: Qualified Source Baseline — cJSON v1.7.19
    :id: IMPL_SOURCE
    :status: active
    :tags: implementation;source
    :links: REQ_CJSON_PARSE_VALID;ARCH_MODULE_BOUNDARY
+
+   The qualified cJSON source is taken from the upstream release v1.7.19
+   (commit tagged in DaveGamble/cJSON). The source consists of two
+   translation units:
+
+   - **cJSON.c** (~3190 LOC): core parser, printer, and object model
+   - **cJSON_Utils.c** (~1480 LOC): JSON Patch, JSON Pointer, Sort, and
+     Merge utilities
+
+   Public headers: ``cJSON.h`` and ``cJSON_Utils.h``.
 
 .. need:: The qualified build uses a specified C99-compliant toolchain with fixed compiler version, flags, and standard library. All compiler warnings are treated as errors (-Werror) with an audited warning flag set.
    :id: IMPL_BUILD

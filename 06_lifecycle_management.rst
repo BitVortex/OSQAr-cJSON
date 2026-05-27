@@ -1,10 +1,18 @@
 Lifecycle Management — cJSON Qualification
 ===========================================
 
-.. need:: The cJSON SEooC qualification lifecycle follows ISO 26262-10 Clause 6 (SEooC development). The lifecycle encompasses four phases: (1) Assumption of Use definition, (2) Safety Requirements derivation from assumptions, (3) Verification and Validation against requirements, (4) Integration validation in target context.
+.. need:: SEooC Qualification Lifecycle — ISO 26262-10:2018 Clause 6
    :id: LM_LIFECYCLE
    :status: active
    :tags: lifecycle
+
+   The cJSON SEooC qualification lifecycle follows ISO 26262-10:2018 Clause 6
+   (SEooC development). The lifecycle encompasses four phases:
+
+   1. Assumption of Use definition
+   2. Safety Requirements derivation from assumptions
+   3. Verification and Validation against requirements
+   4. Integration validation in target context
 
 Assumptions of Use (AoU)
 -------------------------
@@ -154,7 +162,12 @@ Error Detection (TD) to determine the required Tool Confidence Level (TCL).
      - TCL1
      - No qualification required
 
-.. need:: Tool confidence levels are assessed per ISO 26262-8:2018 §11.4.
+.. need:: Tool Confidence Level Assessment — ISO 26262-8:2018 §11.4
+   :id: LM_TOOL_TCL
+   :status: active
+   :tags: lifecycle;tool-qualification;ASIL_D
+   :links: REQ_CJSON_TRACEABILITY
+
    The compiler (gcc) is classified TCL3 (TI2 + TD3) due to its potential
    to introduce errors into the safety-related software. The qualification
    argument relies on increased confidence from use across 10⁹+ field
@@ -162,7 +175,3 @@ Error Detection (TD) to determine the required Tool Confidence Level (TCL).
    tools are TCL1 or TCL2, requiring no formal qualification beyond
    documented validation. A TCL3 qualification report for the compiler
    is deferred to a future qualification cycle.
-   :id: LM_TOOL_TCL
-   :status: active
-   :tags: lifecycle;tool-qualification;ASIL_D
-   :links: REQ_CJSON_TRACEABILITY
