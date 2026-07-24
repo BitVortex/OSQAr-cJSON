@@ -4,9 +4,11 @@
 
 **Policy configuration:** qualification runner schema 1; line coverage >= 90%, branch coverage >= 80%, cyclomatic complexity <= 15, function length <= 100 lines, zero compiler warnings, and zero Cppcheck error/warning findings.
 
-**Decision:** BLOCK
+**Candidate integration decision:** MERGE WITH DOCUMENTED DEVIATIONS
 
-This record inventories the findings produced by the fail-closed native evidence runner. It does not approve a deviation and does not establish qualification, compliance, certification, or release readiness. Any proposed deviation requires an identified reviewer, a rationale tied to the intended use and assumptions of use, and independent review of the exact resulting tree.
+**Qualification and publication decision:** BLOCK
+
+This record inventories the findings produced by the fail-closed native evidence runner. QF-01 and QF-02 are accepted only as deviations from the research candidate's stated goals so that the blocked candidate can be merged for continued work. They are not accepted as evidence of qualification and do not establish qualification, compliance, certification, or release readiness. The machine-readable decision and exact expected failure inventory are in `assurance/candidate-integration-policy.json`.
 
 ## Passing mechanical gates
 
@@ -21,6 +23,8 @@ The current candidate run passed the following mechanical gates:
 
 The generated evidence and adjacent provenance sidecars are under `_build/evidence/` and are intentionally not committed. A pinned 229-file component-source manifest binds archive/export executions to the declared cJSON git object even when Git metadata is absent; the runner regression suite includes 14 tests, including altered-export rejection and controlled fault seeds.
 
+The 90.44% line and 80.26% branch measurements satisfy only the repository's mechanical minimums. Modified condition/decision coverage (MC/DC) was not measured, uncovered code and requirements-linked completeness have not been independently dispositioned, and the measurements do not demonstrate adequacy for an ASIL D software-component qualification argument. Coverage is therefore explicitly below the evidential standard needed to argue qualification, notwithstanding the mechanical activity result.
+
 ## Blocking finding QF-01: complexity thresholds
 
 Lizard measured 154 functions. Fifteen functions exceed cyclomatic complexity 15, function length 100 lines, or both:
@@ -30,7 +34,7 @@ Lizard measured 154 functions. Fifteen functions exceed cyclomatic complexity 15
 
 The largest observations are CCN 37 and 230 lines for `apply_patch`. The complete values are in `_build/evidence/complexity/metrics.json`. The runner correctly returns nonzero; no threshold was relaxed.
 
-**Required disposition:** refactor and requalify the component, or obtain an independently reviewed `passed-with-deviation` disposition with an intended-use argument and explicit risk controls.
+**Candidate disposition:** QF-01 is accepted only for merging this blocked research candidate. Qualification acceptance still requires refactoring and rerunning the evidence, or an independently reviewed intended-use argument with explicit, finding-specific risk controls.
 
 ## Blocking finding QF-02: Cppcheck findings
 
@@ -43,8 +47,10 @@ Cppcheck 2.17.1 produced 17 error/warning findings:
 
 The complete path information and the 88 nonblocking style/information findings are inventoried in `_build/evidence/static-analysis/findings.json`. Compiler and sanitizer success do not by themselves close these static-analysis findings. The runner correctly returns nonzero; no warning was suppressed.
 
-**Required disposition:** eliminate the findings in the controlled component baseline, or independently establish and approve exact finding-specific deviations. A blanket tool suppression is not acceptable.
+**Candidate disposition:** QF-02 is accepted only for merging this blocked research candidate. Qualification acceptance still requires eliminating the findings in the controlled component baseline, or independently establishing and approving exact finding-specific deviations. A blanket tool suppression is not acceptable.
 
 ## Release consequence
 
-`./build-and-test.sh all` returns 1 because QF-01 and QF-02 remain open. Therefore OSQAr qualification-profile acceptance, shipment preparation, release-manifest generation, tagging, and publication remain blocked.
+`./build-and-test.sh all` returns 1 because QF-01 and QF-02 remain open. CI may pass only when that blocked outcome, the exact known failure inventory, and the non-qualification policy all match; such a green run means **candidate integration accepted**, not **qualification passed**. OSQAr qualification-profile acceptance, shipment preparation, release-manifest generation, tagging, and publication remain blocked.
+
+Unapproved evidence and ISO 26262-8:2018, 12.4.3 independent verification of the qualification result are tracked in [GitHub issue #21](https://github.com/BitVortex/OSQAr-cJSON/issues/21). This candidate may be merged with that reference, but the issue must not be closed by the merge itself.

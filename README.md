@@ -12,6 +12,15 @@
 > Item-specific suitability, tool confidence, assumptions of use, anomaly
 > disposition, and independent qualification verification remain unresolved.
 
+The branch is eligible to merge as a **blocked research candidate with documented
+deviations**, not as a qualified component. QF-01 (15 complexity-limit findings)
+and QF-02 (17 Cppcheck error/warning findings) are accepted only for candidate
+integration. The measured 90.44% line and 80.26% branch coverage meet the local
+mechanical thresholds, but MC/DC was not measured and the coverage evidence is
+not adequate to argue ASIL D software-component qualification. Unapproved
+evidence and independent qualification review remain tracked in
+[#21](https://github.com/BitVortex/OSQAr-cJSON/issues/21).
+
 ## Scope
 
 The primary process framing is **ISO 26262-8:2018, Clause 12** (qualification of
@@ -93,11 +102,14 @@ obtain a pass. The runner documentation is in
 
 ## Evidence interpretation
 
-A technical activity can pass while the overall qualification decision remains
-BLOCK. OSQAr framework or typed-traceability PASS means only that the declared
-machine-checkable profile rules passed for the supplied immutable inputs. It
-does not establish semantic adequacy, ISO 26262 compliance, certification, or
-item-specific safety.
+A technical activity or candidate-integration CI run can pass while the overall
+qualification decision remains BLOCK. For this candidate, green CI requires the
+native, framework, and traceability reports to reproduce the exact documented
+blocked outcome in `assurance/candidate-integration-policy.json`; it is not a
+qualification PASS. OSQAr framework or typed-traceability PASS means only that
+the declared machine-checkable profile rules passed for the supplied immutable
+inputs. It does not establish semantic adequacy, ISO 26262 compliance,
+certification, or item-specific safety.
 
 No archive may be represented as a qualified component package while a required
 activity, manifest check, controlled gap, or independent exact-tree review is
