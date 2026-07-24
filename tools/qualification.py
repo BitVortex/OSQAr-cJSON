@@ -14,7 +14,6 @@ import shutil
 import signal
 import subprocess
 import sys
-import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
@@ -32,8 +31,8 @@ EXPECTED_TESTS = (
 EXPECTED_CASES = 162
 UTILS_TESTS = frozenset(("json_patch_tests", "old_utils_tests", "misc_utils_tests"))
 COMPONENT_SOURCES = ("cJSON.c", "cJSON_Utils.c")
-LINE_COVERAGE_MIN = 80.0
-BRANCH_COVERAGE_MIN = 70.0
+LINE_COVERAGE_MIN = 90.0
+BRANCH_COVERAGE_MIN = 80.0
 MAX_CCN = 15
 MAX_FUNCTION_LENGTH = 100
 WARNING_FLAGS = (
@@ -48,6 +47,10 @@ CONFIGURATION = {
     "component_sources": list(COMPONENT_SOURCES),
     "test_executables": list(EXPECTED_TESTS),
     "expected_cases": EXPECTED_CASES,
+    "test_adaptations": {
+        "print_number_should_print_non_number":
+            "replace upstream C89 TEST_IGNORE with C99 NAN/+INFINITY/-INFINITY assertions",
+    },
     "warning_flags": list(WARNING_FLAGS),
     "sanitizers": ["address", "undefined"],
     "coverage_minimum_percent": {
@@ -244,12 +247,22 @@ class Runner:
         log: Path | None = None,
         check: bool = True,
     ) -> subprocess.CompletedProcess[str]:
-        result = subprocess.run(
-            list(argv), cwd=cwd, env=env, text=True,
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False,
-        )
+        try:
+            result = subprocess.run(
+                list(argv), cwd=cwd, env=env, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False,
+                timeout=120,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise QualificationError(
+                f"{shlex.join(argv)} timed out after 120 seconds"
+            ) from exc
+
+        def portable(value: str) -> str:
+            return value.replace(str(self.root), "${PROJECT_ROOT}")
+
         self.history.append({
-            "argv": list(argv),
+            "argv": [portable(value) for value in argv],
             "cwd": str((cwd or self.root).resolve().relative_to(self.root)),
             "returncode": result.returncode,
         })
@@ -314,6 +327,32 @@ class Runner:
         ])
         for name in inventory:
             executable = build / name
+            test_source = self.tests / f"{name}.c"
+            if name == "print_number":
+                source_text = test_source.read_text(encoding="utf-8")
+                ignored = """static void print_number_should_print_non_number(void)
+{
+    TEST_IGNORE();
+    /* FIXME: Cannot test this easily in C89! */
+    /* assert_print_number(\"null\", NaN); */
+    /* assert_print_number(\"null\", INFTY); */
+    /* assert_print_number(\"null\", -INFTY); */
+}"""
+                exercised = """static void print_number_should_print_non_number(void)
+{
+    assert_print_number(\"null\", NAN);
+    assert_print_number(\"null\", INFINITY);
+    assert_print_number(\"null\", -INFINITY);
+}"""
+                if source_text.count(ignored) != 1:
+                    raise QualificationError(
+                        "print_number non-number adaptation no longer matches pinned source"
+                    )
+                test_source = build / "print_number.qualification.c"
+                test_source.write_text(
+                    "#include <math.h>\n" + source_text.replace(ignored, exercised),
+                    encoding="utf-8",
+                )
             # Upstream common.h intentionally includes cJSON.c so tests can
             # exercise internal functions. Utility tests additionally need the
             # separately compiled cJSON_Utils component object.
@@ -322,7 +361,7 @@ class Runner:
             )
             self.command([
                 cc, "-std=c99", *flags, "-I", str(self.source), "-I", str(self.tests),
-                str(self.tests / f"{name}.c"), str(self.tests / "unity_setup.c"),
+                str(test_source), str(self.tests / "unity_setup.c"),
                 *(str(obj) for obj in linked_components), str(unity_obj),
                 "-lm", "-o", str(executable),
             ])
@@ -342,7 +381,6 @@ class Runner:
     ) -> list[UnityRun]:
         evidence = self.evidence_root / activity
         runs: list[UnityRun] = []
-        started = time.monotonic()
         for name in EXPECTED_TESTS:
             executable = build / name
             if not executable.is_file() or not os.access(executable, os.X_OK):
@@ -363,13 +401,15 @@ class Runner:
                 raise QualificationError(
                     f"{name}: {run.failures} failures, {run.ignored} ignored"
                 )
+            if run.ignored:
+                raise QualificationError(f"{name}: {run.ignored} ignored tests are not accepted")
         total = sum(run.tests for run in runs)
         if len(runs) != len(EXPECTED_TESTS) or total != EXPECTED_CASES:
             raise QualificationError(
                 f"suite inventory mismatch: {len(runs)} executables, {total} cases"
             )
         junit = evidence / "junit.xml"
-        tree = junit_tree(runs, f"cJSON-{activity}", time.monotonic() - started)
+        tree = junit_tree(runs, f"cJSON-{activity}", 0.0)
         ET.indent(tree, space="  ")
         tree.write(junit, encoding="utf-8", xml_declaration=True)
         parsed = ET.parse(junit).getroot()
@@ -425,11 +465,14 @@ class Runner:
         text_path = evidence / "coverage.txt"
         common = [
             gcovr, "--root", str(self.source), "--object-directory", str(build),
+            "--gcov-exclude-directories", re.escape(str(self.source / "build")),
             "--filter", re.escape(str(self.source)) + r"/cJSON(_Utils)?\.c$",
-            "--exclude-unreachable-branches", "--branches",
+            "--exclude-unreachable-branches",
         ]
         self.command([*common, "--json-pretty", "--output", str(json_path)])
-        self.command([*common, "--txt", "--output", str(text_path)])
+        self.command([
+            *common, "--txt-metric", "branch", "--txt", "--output", str(text_path)
+        ])
         if not json_path.is_file() or not text_path.is_file():
             raise QualificationError("gcovr did not create JSON and text reports")
         self.artifacts.extend([json_path, text_path])
@@ -478,10 +521,14 @@ class Runner:
     def complexity(self) -> None:
         evidence = self.evidence_dir("complexity")
         lizard = self.require_tool("lizard")
-        sources = [str(self.source / name) for name in COMPONENT_SOURCES]
+        sources = list(COMPONENT_SOURCES)
         raw = evidence / "lizard.txt"
-        self.command([lizard, "-l", "c", *sources], log=raw, check=False)
-        result = self.command([lizard, "--csv", "-l", "c", *sources], check=False)
+        self.command(
+            [lizard, "-l", "c", *sources], cwd=self.source, log=raw, check=False
+        )
+        result = self.command(
+            [lizard, "--csv", "-l", "c", *sources], cwd=self.source, check=False
+        )
         csv_path = evidence / "lizard.csv"
         csv_path.write_text(result.stdout, encoding="utf-8")
         self.artifacts.append(csv_path)
@@ -517,9 +564,9 @@ class Runner:
         xml_path = evidence / "cppcheck.xml"
         result = self.command([
             cppcheck, "--enable=all", "--inconclusive", "--std=c99",
-            "--suppress=missingIncludeSystem", "-I", str(self.source),
-            *(str(self.source / name) for name in COMPONENT_SOURCES), "--xml",
-        ], check=False)
+            "--suppress=missingIncludeSystem", "-I", ".",
+            *COMPONENT_SOURCES, "--xml",
+        ], cwd=self.source, check=False)
         xml_path.write_text(result.stdout, encoding="utf-8")
         self.artifacts.append(xml_path)
         if not result.stdout.strip():
@@ -604,18 +651,42 @@ class Runner:
         }) + "\n", encoding="utf-8")
         if result_path not in self.artifacts:
             self.artifacts.append(result_path)
+
+        junit_path = activity_dir / "result.junit.xml"
+        suite = ET.Element("testsuite", {
+            "name": f"cJSON-{activity}-gate",
+            "tests": "1",
+            "failures": "0" if result == "passed" else "1",
+            "errors": "0",
+            "skipped": "0",
+            "time": "0.000000",
+        })
+        case = ET.SubElement(suite, "testcase", {
+            "classname": "cJSON.qualification",
+            "name": activity,
+        })
+        if result != "passed":
+            ET.SubElement(case, "failure", {"message": message or "activity failed"})
+        junit_tree_result = ET.ElementTree(suite)
+        ET.indent(junit_tree_result, space="  ")
+        junit_tree_result.write(junit_path, encoding="utf-8", xml_declaration=True)
+        self.artifacts.append(junit_path)
+
         artifacts = sorted({
             path.resolve() for path in self.artifacts
             if path.exists() and activity_dir.resolve() in path.resolve().parents
             and not path.name.endswith(".provenance.json")
         })
+        activity_history = ["planned", "ready", "running"]
+        activity_history.append("completed" if result == "passed" else "failed")
         provenance_base = {
             "schema": 1,
             "source_revision": self.source_revision,
             "configuration_sha256": configuration_sha256(),
             "configuration": CONFIGURATION,
             "tool_versions": dict(sorted(self.tool_versions.items())),
-            "activity_history": self.history,
+            "activity_history": activity_history,
+            "command_history": self.history,
             "result": result,
         }
         for artifact in artifacts:
@@ -642,9 +713,9 @@ class Runner:
         try:
             actions[activity]()
         except (QualificationError, OSError, ValueError, json.JSONDecodeError) as exc:
-            self.finalize(activity, "FAIL", str(exc))
+            self.finalize(activity, "failed", str(exc))
             raise QualificationError(f"{activity}: {exc}") from exc
-        self.finalize(activity, "PASS")
+        self.finalize(activity, "passed")
 
 
 def parse_args(argv: Sequence[str]) -> argparse.Namespace:

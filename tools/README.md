@@ -36,8 +36,8 @@ runs.
 
 Enforced thresholds are:
 
-- line coverage: at least 80%
-- branch coverage: at least 70%
+- line coverage: at least 90%
+- branch coverage: at least 80%
 - cyclomatic complexity: at most 15 per function
 - function length: at most 100 lines per function
 - compiler warnings: none under the configured strong C99 flags with `-Werror`
@@ -48,7 +48,10 @@ ignored by Git. Every report, log, JUnit file, and result file has an adjacent
 `.provenance.json` sidecar containing its SHA-256, the source revision,
 configuration SHA-256 and full configuration, tool versions, activity history,
 and final result. JUnit contains one testcase per Unity case and reconciled
-suite counters.
+suite counters. The pinned upstream suite contains one C89-era `TEST_IGNORE`
+for non-finite numbers. The runner creates a build-directory-only C99 adaptation
+that executes that case with `NAN`, positive infinity, and negative infinity;
+the pinned submodule remains unchanged and ignored cases are rejected.
 
 Run the runner tests with `python3 -m pytest -q`. The focused tests include real
 temporary repository-copy fault seeds for a forced Unity assertion failure, an

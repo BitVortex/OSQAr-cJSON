@@ -89,6 +89,11 @@ def test_junit_has_one_element_per_unity_case() -> None:
     assert len(root.findall("testcase")) == qualification.EXPECTED_CASES
 
 
+def test_configured_coverage_thresholds_preserve_documented_policy() -> None:
+    assert qualification.LINE_COVERAGE_MIN == 90.0
+    assert qualification.BRANCH_COVERAGE_MIN == 80.0
+
+
 def test_forced_unity_failure_fails_closed_in_temp_copy(tmp_path: Path) -> None:
     repository = copy_repository(tmp_path)
     source = repository / "cjson-source" / "tests" / "parse_hex4.c"
@@ -103,7 +108,7 @@ def test_forced_unity_failure_fails_closed_in_temp_copy(tmp_path: Path) -> None:
     assert result.returncode != 0
     evidence = repository / "_build" / "evidence" / "test"
     assert "parse_hex4: exited" in result.stdout
-    assert json.loads((evidence / "result.json").read_text())["result"] == "FAIL"
+    assert json.loads((evidence / "result.json").read_text())["result"] == "failed"
 
 
 def test_abort_signal_is_detected_in_temp_copy(tmp_path: Path) -> None:
