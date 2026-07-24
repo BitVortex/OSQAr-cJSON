@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import Callable
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "tools" / "verify_candidate_integration.py"
 POLICY = ROOT / "assurance" / "candidate-integration-policy.json"
 GSN = ROOT / "_static" / "gsn_safety_case.puml"
+NATIVE_EVIDENCE = ROOT / "_build" / "evidence"
 
 
 def write_json(path: Path, value: object) -> None:
@@ -38,30 +41,28 @@ def candidate_fixture(
         if message:
             payload["message"] = message
         write_json(evidence / activity / "result.json", payload)
-    write_json(
-        evidence / "coverage" / "metrics.json",
-        {
-            "line": {"percent": coverage_percent},
-            "branch": {"percent": 80.2593659942363},
-        },
+    for activity, name in (
+        ("coverage", "metrics.json"),
+        ("complexity", "metrics.json"),
+        ("static-analysis", "findings.json"),
+    ):
+        target = evidence / activity / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(NATIVE_EVIDENCE / activity / name, target)
+
+    coverage_metrics = json.loads((evidence / "coverage" / "metrics.json").read_text())
+    coverage_metrics["line"]["percent"] = coverage_percent
+    write_json(evidence / "coverage" / "metrics.json", coverage_metrics)
+    complexity_metrics = json.loads((evidence / "complexity" / "metrics.json").read_text())
+    complexity_metrics["violations"] = complexity_metrics["violations"][:complexity_count]
+    write_json(evidence / "complexity" / "metrics.json", complexity_metrics)
+    static_metrics = json.loads(
+        (evidence / "static-analysis" / "findings.json").read_text()
     )
-    write_json(
-        evidence / "complexity" / "metrics.json",
-        {
-            "functions": 154,
-            "violations": [
-                {"cyclomatic_complexity": 37, "function_length": 230},
-                *(
-                    {"cyclomatic_complexity": 16, "function_length": 101}
-                    for _ in range(complexity_count - 1)
-                ),
-            ],
-        },
-    )
-    write_json(
-        evidence / "static-analysis" / "findings.json",
-        {"blocking_findings": [{"id": index} for index in range(static_finding_count)]},
-    )
+    static_metrics["blocking_findings"] = static_metrics["blocking_findings"][
+        :static_finding_count
+    ]
+    write_json(evidence / "static-analysis" / "findings.json", static_metrics)
 
     framework_failures = [
         "activity complexity: finding QF-01 is undispositioned (open)",
@@ -110,11 +111,15 @@ def policy() -> dict[str, object]:
             {
                 "id": "QF-01",
                 "disposition": "accepted only for integration of the blocked research candidate",
+                "goal": "cyclomatic complexity <= 15 and function length <= 100 lines",
+                "observed": "15 of 154 functions exceed one or both limits; maxima are CCN 37 and 230 lines",
                 "qualification_effect": "unresolved; does not support qualification acceptance",
             },
             {
                 "id": "QF-02",
                 "disposition": "accepted only for integration of the blocked research candidate",
+                "goal": "zero Cppcheck error/warning findings",
+                "observed": "17 Cppcheck error/warning findings remain",
                 "qualification_effect": "unresolved; does not support qualification acceptance",
             },
         ],
@@ -151,14 +156,17 @@ def invoke(
     coverage_percent: float = 90.43863972400197,
     complexity_count: int = 15,
     static_finding_count: int = 17,
+    evidence_mutator: Callable[[Path], None] | None = None,
 ) -> subprocess.CompletedProcess[str]:
-    _, framework, trace = candidate_fixture(
+    evidence, framework, trace = candidate_fixture(
         tmp_path,
         traceability_violations,
         coverage_percent,
         complexity_count,
         static_finding_count,
     )
+    if evidence_mutator is not None:
+        evidence_mutator(evidence)
     policy_path = tmp_path / "policy.json"
     write_json(policy_path, policy_value)
     return subprocess.run(
@@ -219,6 +227,19 @@ def test_shipped_gsn_does_not_claim_the_blocked_proposition() -> None:
     assert "correctly parses all valid JSON" not in gsn
 
 
+def test_published_static_claim_surfaces_do_not_contradict_block() -> None:
+    forbidden = (
+        "No gaps documented",
+        "All verification activities executed successfully",
+        "sufficiently safe",
+        "All safety requirements are verified",
+    )
+    for path in (ROOT / "_static").rglob("*"):
+        if path.is_file():
+            text = path.read_text(encoding="utf-8", errors="ignore")
+            assert not any(claim in text for claim in forbidden), path
+
+
 def test_documented_blocked_candidate_is_accepted_for_integration(tmp_path: Path) -> None:
     result = invoke(tmp_path, policy())
     assert result.returncode == 0, result.stdout
@@ -242,7 +263,7 @@ def test_deviation_cannot_be_promoted_to_qualification_acceptance(tmp_path: Path
     deviations[0]["qualification_effect"] = "accepted for qualification"
     result = invoke(tmp_path, value)
     assert result.returncode == 1
-    assert "QF-01 deviation is not limited to candidate integration" in result.stdout
+    assert "candidate integration deviation inventory differs" in result.stdout
 
 
 def test_unexpected_native_activity_is_rejected(tmp_path: Path) -> None:
@@ -270,3 +291,45 @@ def test_changed_qf_finding_inventories_are_rejected(tmp_path: Path) -> None:
     static_analysis = invoke(tmp_path, policy(), static_finding_count=16)
     assert static_analysis.returncode == 1
     assert "QF-02 native finding inventory differs" in static_analysis.stdout
+
+
+def test_all_native_evidence_fields_are_bound(tmp_path: Path) -> None:
+    def changed_coverage(evidence: Path) -> None:
+        path = evidence / "coverage" / "metrics.json"
+        value = json.loads(path.read_text())
+        value["scope"] = ["unrelated.c"]
+        write_json(path, value)
+
+    def changed_complexity(evidence: Path) -> None:
+        path = evidence / "complexity" / "metrics.json"
+        value = json.loads(path.read_text())
+        value["violations"][1]["function"] = "different_function"
+        write_json(path, value)
+
+    def changed_static(evidence: Path) -> None:
+        path = evidence / "static-analysis" / "findings.json"
+        value = json.loads(path.read_text())
+        value["blocking_findings"][0]["id"] = "differentFinding"
+        write_json(path, value)
+
+    for mutator, expected in (
+        (changed_coverage, "native coverage metrics differ"),
+        (changed_complexity, "QF-01 native finding inventory differs"),
+        (changed_static, "QF-02 native finding inventory differs"),
+    ):
+        result = invoke(tmp_path, policy(), evidence_mutator=mutator)
+        assert result.returncode == 1
+        assert expected in result.stdout
+
+
+def test_deviation_goal_and_observation_are_bound(tmp_path: Path) -> None:
+    for field, replacement in (("goal", "goal met"), ("observed", "no findings")):
+        value = policy()
+        deviations = value["integration_deviations"]
+        assert isinstance(deviations, list)
+        first = deviations[0]
+        assert isinstance(first, dict)
+        first[field] = replacement
+        result = invoke(tmp_path, value)
+        assert result.returncode == 1
+        assert "candidate integration deviation inventory differs" in result.stdout

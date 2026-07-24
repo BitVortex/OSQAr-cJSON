@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -23,6 +24,14 @@ EXPECTED_ACTIVITY_RESULTS = {
     "static-analysis": "failed",
     "reproducible": "passed",
 }
+EXPECTED_DEVIATION_DIGEST = (
+    "e8f21a1f22555d5da51dc5f56d514061b33310c6d34b46a1bf338efe6f7accc3"
+)
+EXPECTED_NATIVE_EVIDENCE_DIGESTS = {
+    "coverage": "78efa7376990bd8507bf36d5351a12ece0d1a4a920fa49f1383486ff8354d19b",
+    "complexity": "b7880431337e5f2fd40e6747eedbcbc67106467fa57d9f37efddcd552824d0de",
+    "static-analysis": "939e268de497887f41538469fbd3afd3ca3643d831cc589ac103d4270b511aaa",
+}
 
 
 def load_object(path: Path, label: str) -> dict[str, Any]:
@@ -33,6 +42,14 @@ def load_object(path: Path, label: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"{label} must be a JSON object")
     return value
+
+
+def canonical_digest(value: object) -> str:
+    """Hash complete JSON semantics, independent of whitespace and key order."""
+    canonical = json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
 
 
 def verify(
@@ -72,23 +89,11 @@ def verify(
             errors.append("coverage record must not claim adequacy for qualification")
 
     deviations = policy.get("integration_deviations")
-    expected_deviation_ids = {"QF-01", "QF-02"}
-    if not isinstance(deviations, list) or {
-        item.get("id") for item in deviations if isinstance(item, dict)
-    } != expected_deviation_ids or len(deviations) != 2:
-        errors.append("candidate integration deviations must be exactly QF-01 and QF-02")
-    else:
-        for item in deviations:
-            deviation_id = item["id"]
-            if (
-                item.get("disposition")
-                != "accepted only for integration of the blocked research candidate"
-                or item.get("qualification_effect")
-                != "unresolved; does not support qualification acceptance"
-            ):
-                errors.append(
-                    f"{deviation_id} deviation is not limited to candidate integration"
-                )
+    if (
+        not isinstance(deviations, list)
+        or canonical_digest(deviations) != EXPECTED_DEVIATION_DIGEST
+    ):
+        errors.append("candidate integration deviation inventory differs")
 
     expected_results = policy.get("expected_activity_results")
     if expected_results != EXPECTED_ACTIVITY_RESULTS:
@@ -122,14 +127,9 @@ def verify(
             coverage_metrics = load_object(
                 evidence_root / "coverage" / "metrics.json", "native coverage metrics"
             )
-            line = coverage_metrics.get("line")
-            branch = coverage_metrics.get("branch")
-            if (
-                not isinstance(line, dict)
-                or not isinstance(branch, dict)
-                or line.get("percent") != 90.43863972400197
-                or branch.get("percent") != 80.2593659942363
-            ):
+            if canonical_digest(coverage_metrics) != EXPECTED_NATIVE_EVIDENCE_DIGESTS[
+                "coverage"
+            ]:
                 errors.append("native coverage metrics differ from the documented candidate")
         except ValueError as exc:
             errors.append(str(exc))
@@ -139,22 +139,11 @@ def verify(
                 evidence_root / "complexity" / "metrics.json",
                 "QF-01 native finding inventory",
             )
-            complexity_findings = complexity_metrics.get("violations")
-            if (
-                complexity_metrics.get("functions") != 154
-                or not isinstance(complexity_findings, list)
-                or len(complexity_findings) != 15
-                or not all(isinstance(item, dict) for item in complexity_findings)
-                or max(
-                    item.get("cyclomatic_complexity", -1)
-                    for item in complexity_findings
-                )
-                != 37
-                or max(item.get("function_length", -1) for item in complexity_findings)
-                != 230
-            ):
+            if canonical_digest(complexity_metrics) != EXPECTED_NATIVE_EVIDENCE_DIGESTS[
+                "complexity"
+            ]:
                 errors.append("QF-01 native finding inventory differs")
-        except (TypeError, ValueError) as exc:
+        except ValueError as exc:
             errors.append(f"QF-01 native finding inventory differs: {exc}")
 
         try:
@@ -162,8 +151,9 @@ def verify(
                 evidence_root / "static-analysis" / "findings.json",
                 "QF-02 native finding inventory",
             )
-            static_findings = static_metrics.get("blocking_findings")
-            if not isinstance(static_findings, list) or len(static_findings) != 17:
+            if canonical_digest(static_metrics) != EXPECTED_NATIVE_EVIDENCE_DIGESTS[
+                "static-analysis"
+            ]:
                 errors.append("QF-02 native finding inventory differs")
         except ValueError as exc:
             errors.append(str(exc))
