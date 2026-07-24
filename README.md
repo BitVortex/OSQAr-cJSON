@@ -4,22 +4,37 @@
 [![OSQAr](https://img.shields.io/badge/OSQAr-v0.10.2-blue)](https://github.com/BitVortex/OSQAr/releases/tag/v0.10.2)
 [![cJSON](https://img.shields.io/badge/cJSON-v1.7.19-green)](https://github.com/DaveGamble/cJSON/releases/tag/v1.7.19)
 
-> **RESEARCH ARTIFACT — CURRENT DECISION: BLOCK**
+> **WORK IN PROGRESS — QUALIFICATION AND PUBLICATION: BLOCKED**
 >
-> This repository applies OSQAr v0.10.2 to a bounded qualification attempt for
-> cJSON v1.7.19. It is not a certification, ISO 26262 compliance statement,
-> ASIL allocation, or claim that cJSON is qualified for an automotive item.
-> Item-specific suitability, tool confidence, assumptions of use, anomaly
-> disposition, and independent qualification verification remain unresolved.
+> The `main` branch contains an actively developed, bounded qualification attempt
+> for cJSON v1.7.19 using OSQAr v0.10.2. It is not a certification, an ISO 26262
+> compliance statement, an ASIL allocation, or a claim that cJSON is qualified
+> for an automotive item. The merged baseline is intended to support continued
+> qualification work while its documented gaps remain visible and fail closed.
 
-The branch is eligible to merge as a **blocked research candidate with documented
-deviations**, not as a qualified component. QF-01 (15 complexity-limit findings)
-and QF-02 (17 Cppcheck error/warning findings) are accepted only for candidate
-integration. The measured 90.44% line and 80.26% branch coverage meet the local
-mechanical thresholds, but MC/DC was not measured and the coverage evidence is
-not adequate to argue ASIL D software-component qualification. Unapproved
-evidence and independent qualification review remain tracked in
-[#21](https://github.com/BitVortex/OSQAr-cJSON/issues/21).
+## Current qualification gaps
+
+- **QF-01 — complexity:** 15 of 154 measured functions exceed the configured
+  cyclomatic-complexity limit, function-length limit, or both; the observed
+  maxima are CCN 37 and 230 lines.
+- **QF-02 — static analysis:** 17 Cppcheck error/warning findings remain open.
+- **Coverage adequacy:** measured coverage is 90.44% line and 80.26% branch.
+  These values meet local mechanical thresholds, but MC/DC has not been measured
+  and uncovered code has not received an independently approved disposition.
+- **Outstanding verification activities:** Valgrind/Memcheck, sustained fuzzing,
+  MISRA C assessment with a suitable checker, MC/DC measurement, and independent
+  RFC-conformance validation remain incomplete; see open issues
+  [#5](https://github.com/BitVortex/OSQAr-cJSON/issues/5) through
+  [#9](https://github.com/BitVortex/OSQAr-cJSON/issues/9).
+- **Qualification assurance:** evidence approval, finding-specific deviation
+  approval, tool-confidence justification, intended-use and assumptions-of-use
+  confirmation, anomaly disposition, and independent verification of the final
+  qualification result remain incomplete.
+
+CI is intentionally green only when it reproduces this exact documented blocked
+state. Qualification-profile acceptance, release preparation, tagging, and
+publication remain disabled until the applicable gaps are resolved and the
+result receives independent approval.
 
 ## Scope
 
@@ -59,7 +74,7 @@ not silently extend the claim boundary.
 The full pre-revision findings are retained in
 [`assurance/reviews/pre-v0.10.2-baseline-review.md`](assurance/reviews/pre-v0.10.2-baseline-review.md).
 
-## Reproduce the candidate evidence
+## Reproduce the current evidence
 
 Prerequisites are Python 3.11+, a C99 compiler/toolchain, `ar`, and `uv` (or an
 equivalent hash-verifying installer).
@@ -103,12 +118,12 @@ obtain a pass. The runner documentation is in
 ## Evidence interpretation
 
 A technical activity or candidate-integration CI run can pass while the overall
-qualification decision remains BLOCK. For this candidate, green CI requires the
-native, framework, and traceability reports to reproduce the exact documented
-blocked outcome in `assurance/candidate-integration-policy.json`; it is not a
-qualification PASS. OSQAr framework or typed-traceability PASS means only that
-the declared machine-checkable profile rules passed for the supplied immutable
-inputs. It does not establish semantic adequacy, ISO 26262 compliance,
+qualification decision remains BLOCK. For the current `main` baseline, green CI
+requires the native, framework, and traceability reports to reproduce the exact
+documented blocked outcome in `assurance/candidate-integration-policy.json`;
+it is not a qualification PASS. OSQAr framework or typed-traceability PASS means
+only that the declared machine-checkable profile rules passed for the supplied
+immutable inputs. It does not establish semantic adequacy, ISO 26262 compliance,
 certification, or item-specific safety.
 
 No archive may be represented as a qualified component package while a required
