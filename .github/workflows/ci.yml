@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - qualification/**
+    tags:
+      - '[0-9]*.[0-9]*.[0-9]*-[0-9]*.[0-9]*.[0-9]*'
   pull_request:
     branches: [main]
 
@@ -112,10 +114,131 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
-  publication-disabled:
-    if: false
+      - name: Upload exact-tag documentation for Pages
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@v4
+        with:
+          name: sphinx-html-${{ github.sha }}
+          path: _build/html/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Prepare pre-integration development release bundle
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          RELEASE_VERSION: ${{ github.ref_name }}
+          RELEASE_REVISION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          rm -rf _shipment _build/release
+          mkdir -p _build/release
+          python tools/prepare_development_release.py \
+            --root . \
+            --output _shipment/osqar-cjson-development-bundle \
+            --docs _build/html \
+            --evidence _build/evidence \
+            --release-version "${RELEASE_VERSION}" \
+            --release-revision "${RELEASE_REVISION}"
+          SOURCE_REVISION="$(git rev-parse HEAD:cjson-source)"
+          osqar release-manifest generate \
+            --root _shipment/osqar-cjson-development-bundle \
+            --output _shipment/osqar-cjson-development-bundle/OSQAR-RELEASE-MANIFEST.json \
+            --source-revision "${SOURCE_REVISION}" \
+            --release-version v0.10.2 \
+            --producer-command "GitHub Actions ${GITHUB_WORKFLOW} ${GITHUB_RUN_ID}" \
+            --tool-version 0.10.2 \
+            --exclude documentation/_static/scripts/furo-extensions.js \
+            --exclude evidence/warnings/cJSON.txt \
+            --exclude evidence/warnings/cJSON_Utils.txt
+          osqar release-manifest verify \
+            --root _shipment/osqar-cjson-development-bundle \
+            --manifest _shipment/osqar-cjson-development-bundle/OSQAR-RELEASE-MANIFEST.json \
+            --source-revision "${SOURCE_REVISION}" \
+            --release-version v0.10.2 \
+            --report-json _build/release/manifest-verification.json
+          ARCHIVE="osqar_cjson_development_bundle_${RELEASE_VERSION}.zip"
+          osqar shipment package \
+            --shipment _shipment/osqar-cjson-development-bundle \
+            --output "_build/release/${ARCHIVE}"
+          (
+            cd _build/release
+            sha256sum "${ARCHIVE}" > "${ARCHIVE}.sha256"
+          )
+
+      - name: Upload development release assets
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@v4
+        with:
+          name: development-release-${{ github.sha }}
+          path: |
+            _build/release/osqar_cjson_development_bundle_${{ github.ref_name }}.zip
+            _build/release/osqar_cjson_development_bundle_${{ github.ref_name }}.zip.sha256
+          if-no-files-found: error
+          retention-days: 90
+
+  release-development-bundle:
+    needs: qualification-candidate
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - run: |
-          echo "Publication remains disabled until all qualification gates pass,"
-          echo "the release manifest verifies, and the exact tree receives independent review."
+      - name: Download exact-tag release assets
+        uses: actions/download-artifact@v4
+        with:
+          name: development-release-${{ github.sha }}
+          path: dist
+
+      - name: Publish explicitly non-qualified development prerelease
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "OSQAr-cJSON ${{ github.ref_name }} — pre-integration development release"
+          prerelease: true
+          make_latest: false
+          fail_on_unmatched_files: true
+          generate_release_notes: false
+          body: |
+            ## Pre-integration development release — qualification remains BLOCKED
+
+            This bundle publishes the current qualification work in progress for
+            development and pre-integration use. It is **not** a qualified component
+            package, certification, ISO 26262 compliance statement, ASIL allocation,
+            or claim that cJSON is suitable for an automotive item.
+
+            The tagged policy and bundled evidence preserve the exact known blocked
+            outcome: complexity finding QF-01, static-analysis finding QF-02,
+            unapproved qualification evidence, and the documented outstanding
+            verification activities remain open. Green CI confirms reproduction of
+            that bounded state; it does not change the qualification decision.
+
+            The ZIP contains the exact tagged repository sources, the pinned cJSON
+            source tree, rendered documentation, generated evidence, a development-
+            release status record, and an OSQAr release manifest with the documented
+            zero-length-file exclusions. Verify the complete downloaded ZIP with its
+            adjacent `.sha256` file before use.
+          files: |
+            dist/osqar_cjson_development_bundle_${{ github.ref_name }}.zip
+            dist/osqar_cjson_development_bundle_${{ github.ref_name }}.zip.sha256
+
+  pages:
+    needs: qualification-candidate
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: Download exact-tag Sphinx HTML
+        uses: actions/download-artifact@v4
+        with:
+          name: sphinx-html-${{ github.sha }}
+          path: _site
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy exact-tag documentation to GitHub Pages
+        uses: actions/deploy-pages@v4

@@ -6,7 +6,9 @@ OSQAr-cJSON: bounded qualification attempt
    This repository is a research and assurance work product for a bounded
    software-component qualification attempt. It is **not** a certification,
    compliance statement, ASIL allocation, or claim that cJSON is qualified for
-   an automotive item. The current release decision is **BLOCK**.
+   an automotive item. The current qualification decision is **BLOCK**.
+   Release ``1.7.19-0.10.2`` is authorized only as a pre-integration development
+   prerelease; qualification remains blocked.
 
 The repository applies OSQAr v0.10.2 fail-closed evidence and typed-traceability
 interfaces to the exact cJSON v1.7.19 core-source baseline. The primary process
@@ -22,9 +24,11 @@ unit and supplemental scenarios, sanitizers, coverage, compiler warnings, and
 reproducibility, but fails the configured complexity and static-analysis gates.
 Framework and traceability qualification profiles therefore also fail. CI is
 green only when it reproduces that exact blocked outcome and validates it against
-``assurance/candidate-integration-policy.json``; green CI is not a qualification
-or publication decision. See :doc:`05_test_results` for the measured results and
-remaining verification work.
+``assurance/candidate-integration-policy.json``. Green CI is not a qualification
+decision. The same policy separately permits the exact tagged
+``1.7.19-0.10.2`` bundle to be published for pre-integration development while
+qualification remains blocked. See :doc:`05_test_results` for the measured
+results and remaining verification work.
 
 Contents
 --------

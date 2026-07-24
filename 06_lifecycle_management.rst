@@ -162,4 +162,19 @@ Release rule
 Any open gap with ``gate_effect=block``, failed qualification-profile activity,
 manifest mismatch, or independent BLOCK decision prevents publication or use of
 the archive as a qualified software component package. A blocked archive may be
-retained only as a clearly labeled research/review candidate.
+retained as a clearly labeled research/review candidate. Policy version 2
+authorizes ``1.7.19-0.10.2`` as a GitHub prerelease for pre-integration
+development only, provided the exact documented blocked outcome, exact-tree
+review, archive checksum, and closed release manifest all pass. Qualification
+remains blocked.
+
+The prerelease archive carries ``DEVELOPMENT-RELEASE.json`` with the exact tag
+commit, tree, component revision, release channel, and non-qualification status.
+``OSQAR-RELEASE-MANIFEST.json`` provides the closed inventory subject to its
+explicit exclusions. Neither record converts failed or unapproved qualification
+evidence into accepted evidence.
+
+OSQAr release manifests reject zero-length artifacts. The manifest therefore
+records explicit exclusions for the empty Furo extension stub and the two empty
+compiler-warning logs. ``DEVELOPMENT-RELEASE.json`` fixes that exclusion list,
+and the adjacent ZIP SHA-256 binds the complete archive including those files.

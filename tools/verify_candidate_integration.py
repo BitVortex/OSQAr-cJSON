@@ -10,7 +10,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
-EXPECTED_SCHEMA = "osqar-cjson.candidate-integration-policy.v1"
+EXPECTED_SCHEMA = "osqar-cjson.candidate-integration-policy.v2"
+EXPECTED_DEVELOPMENT_RELEASE = {
+    "authorized": True,
+    "channel": "pre-integration-development",
+    "github_prerelease": True,
+    "release_version": "1.7.19-0.10.2",
+}
 KNOWN_FAILURE_MESSAGES = {
     "complexity": "complexity limits exceeded by 15 functions",
     "static-analysis": "cppcheck reported 17 error/warning findings",
@@ -69,8 +75,10 @@ def verify(
         errors.append("candidate integration decision is not explicit")
     if policy.get("qualification_claimed") is not False:
         errors.append("candidate integration policy must not claim qualification")
-    if policy.get("publication_authorized") is not False:
-        errors.append("candidate integration policy must not authorize publication")
+    if policy.get("qualification_publication_authorized") is not False:
+        errors.append("candidate integration policy must not authorize qualification publication")
+    if policy.get("development_release") != EXPECTED_DEVELOPMENT_RELEASE:
+        errors.append("development release authorization differs from the bounded candidate")
     issue = policy.get("follow_up_issue")
     if issue != "https://github.com/BitVortex/OSQAr-cJSON/issues/21":
         errors.append("candidate integration policy must bind follow-up issue 21")
@@ -221,7 +229,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  - {error}", file=sys.stderr)
         return 1
     print("candidate integration policy: PASS")
-    print("qualification status: BLOCKED; no qualification or publication claim")
+    print("qualification status: BLOCKED; no qualification publication claim")
+    print("development release: AUTHORIZED as a GitHub prerelease")
     return 0
 
 

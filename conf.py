@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 project = "OSQAr-cJSON Qualification Attempt"
 author = "OSQAr-cJSON contributors"
-release = "0.10.2"
+release = "1.7.19-0.10.2"
 
 extensions = [
     "sphinx_needs",

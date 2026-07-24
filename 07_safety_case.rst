@@ -55,4 +55,10 @@ machine-checkable profile rules passed for the supplied project. It does not
 mean that this proposition is accepted, that ISO 26262 compliance has been
 assessed, or that cJSON is qualified for an automotive use. Conversely, any
 framework, traceability, evidence, manifest, or independent-review failure is a
-release BLOCK.
+qualification-release BLOCK.
+
+Release ``1.7.19-0.10.2`` is a separately controlled pre-integration development
+prerelease. It may reproduce and disclose the reviewed blocked state for ongoing
+engineering, but qualification remains blocked. The prerelease is not evidence
+for the top-level proposition and must not be presented as a qualified component
+package.

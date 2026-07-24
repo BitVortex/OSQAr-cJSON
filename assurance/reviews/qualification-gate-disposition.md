@@ -6,9 +6,9 @@
 
 **Candidate integration decision:** MERGE WITH DOCUMENTED DEVIATIONS
 
-**Qualification and publication decision:** BLOCK
+**Qualification and qualified-component publication decision:** BLOCK
 
-This record inventories the findings produced by the fail-closed native evidence runner. QF-01 and QF-02 are accepted only as deviations from the research candidate's stated goals so that the blocked candidate can be merged for continued work. They are not accepted as evidence of qualification and do not establish qualification, compliance, certification, or release readiness. The machine-readable decision and exact expected failure inventory are in `assurance/candidate-integration-policy.json`.
+This record inventories the findings produced by the fail-closed native evidence runner. QF-01 and QF-02 are accepted only as deviations from the research candidate's stated goals so that the blocked candidate can be merged for continued work. They are not accepted as evidence of qualification and do not establish qualification, compliance, certification, or qualified-component release readiness. The machine-readable decision and exact expected failure inventory are in `assurance/candidate-integration-policy.json`.
 
 ## Passing mechanical gates
 
@@ -51,6 +51,6 @@ The complete path information and the 88 nonblocking style/information findings 
 
 ## Release consequence
 
-`./build-and-test.sh all` returns 1 because QF-01 and QF-02 remain open. CI may pass only when that blocked outcome, the exact known failure inventory, and the non-qualification policy all match; such a green run means **candidate integration accepted**, not **qualification passed**. OSQAr qualification-profile acceptance, shipment preparation, release-manifest generation, tagging, and publication remain blocked.
+`./build-and-test.sh all` returns 1 because QF-01 and QF-02 remain open. CI may pass only when that blocked outcome, the exact known failure inventory, and the non-qualification policy all match; such a green run means **candidate integration accepted**, not **qualification passed**. OSQAr qualification-profile acceptance and publication as a qualified component package remain blocked. Candidate-policy version 2 separately permits `1.7.19-0.10.2` as a clearly labeled pre-integration development prerelease that reproduces this exact blocked state.
 
-Unapproved evidence and ISO 26262-8:2018, 12.4.3 independent verification of the qualification result are tracked in [GitHub issue #21](https://github.com/BitVortex/OSQAr-cJSON/issues/21). This candidate may be merged with that reference, but the issue must not be closed by the merge itself.
+Unapproved evidence and ISO 26262-8:2018, 12.4.3 independent verification of the qualification result were tracked in [GitHub issue #21](https://github.com/BitVortex/OSQAr-cJSON/issues/21). Issue #21 was closed as not planned after candidate integration without completing those qualification criteria; it remains a historical policy reference, not evidence of qualification approval.

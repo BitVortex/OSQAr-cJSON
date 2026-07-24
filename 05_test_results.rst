@@ -40,8 +40,8 @@ A candidate evidence set is complete only when all of the following hold:
 A tool-created file that fails any reconciliation rule is a failed activity,
 not partial positive evidence.
 
-Current release decision
-------------------------
+Qualification and development-release decisions
+------------------------------------------------
 
 **BLOCKED.** A fresh candidate execution passed the upstream and supplemental
 scenario runs, sanitizer execution, coverage thresholds, compiler warning audit,
@@ -49,8 +49,12 @@ and reproducibility comparison. It failed the configured complexity and Cppcheck
 gates. OSQAr qualification-profile validation consequently returned ``FAIL``;
 the generated evidence also remains unapproved pending independent exact-tree
 review. The exact finding inventory and required dispositions are recorded in
-``assurance/reviews/qualification-gate-disposition.md``. No shipment, release
-manifest, tag, or publication may be produced from this state.
+``assurance/reviews/qualification-gate-disposition.md``. Qualification remains
+blocked. Policy version 2 nevertheless permits the exact
+``1.7.19-0.10.2`` tag as a pre-integration development prerelease. Its bundle
+must preserve this blocked evidence, carry explicit non-qualification metadata,
+and pass closed-manifest and exact-tree review gates. It is not a qualified
+component shipment.
 
 Review tracking status
 ----------------------

@@ -4,7 +4,7 @@
 [![OSQAr](https://img.shields.io/badge/OSQAr-v0.10.2-blue)](https://github.com/BitVortex/OSQAr/releases/tag/v0.10.2)
 [![cJSON](https://img.shields.io/badge/cJSON-v1.7.19-green)](https://github.com/DaveGamble/cJSON/releases/tag/v1.7.19)
 
-> **WORK IN PROGRESS — QUALIFICATION AND PUBLICATION: BLOCKED**
+> **WORK IN PROGRESS — QUALIFICATION: BLOCKED; DEVELOPMENT PRERELEASE AVAILABLE**
 >
 > The `main` branch contains an actively developed, bounded qualification attempt
 > for cJSON v1.7.19 using OSQAr v0.10.2. It is not a certification, an ISO 26262
@@ -32,9 +32,21 @@
   qualification result remain incomplete.
 
 CI is intentionally green only when it reproduces this exact documented blocked
-state. Qualification-profile acceptance, release preparation, tagging, and
-publication remain disabled until the applicable gaps are resolved and the
-result receives independent approval.
+state. The candidate policy permits release `1.7.19-0.10.2` only as a GitHub
+prerelease for pre-integration development. Qualification remains blocked, and
+the prerelease must not be represented as a qualified component package.
+
+## Development release boundary
+
+Tag `1.7.19-0.10.2` publishes the exact tagged repository sources, pinned
+cJSON source, rendered documentation, and generated blocked-state evidence in a
+release-manifest bundle. `DEVELOPMENT-RELEASE.json` labels the release channel
+and blocked qualification status; `OSQAR-RELEASE-MANIFEST.json` binds the
+bundle inventory except for three explicitly listed zero-length renderer/warning
+files, while the adjacent archive checksum binds the complete ZIP. This
+publication supports development and pre-integration
+work only. It does not approve evidence or establish qualification, compliance,
+certification, an ASIL allocation, or item-specific suitability.
 
 ## Scope
 
@@ -128,7 +140,8 @@ certification, or item-specific safety.
 
 No archive may be represented as a qualified component package while a required
 activity, manifest check, controlled gap, or independent exact-tree review is
-BLOCK.
+BLOCK. A separately labeled pre-integration development prerelease does not alter
+that decision.
 
 ## Repository map
 

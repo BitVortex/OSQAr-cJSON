@@ -96,10 +96,16 @@ def candidate_fixture(
 
 def policy() -> dict[str, object]:
     return {
-        "schema": "osqar-cjson.candidate-integration-policy.v1",
+        "schema": "osqar-cjson.candidate-integration-policy.v2",
         "decision": "merge-candidate-with-known-limitations",
         "qualification_claimed": False,
-        "publication_authorized": False,
+        "qualification_publication_authorized": False,
+        "development_release": {
+            "authorized": True,
+            "channel": "pre-integration-development",
+            "github_prerelease": True,
+            "release_version": "1.7.19-0.10.2",
+        },
         "follow_up_issue": "https://github.com/BitVortex/OSQAr-cJSON/issues/21",
         "coverage": {
             "line_percent": 90.44,
@@ -191,8 +197,15 @@ def invoke(
 
 def test_checked_in_policy_records_nonqualification_limitations() -> None:
     value = json.loads(POLICY.read_text())
+    assert value["schema"] == "osqar-cjson.candidate-integration-policy.v2"
     assert value["qualification_claimed"] is False
-    assert value["publication_authorized"] is False
+    assert value["qualification_publication_authorized"] is False
+    assert value["development_release"] == {
+        "authorized": True,
+        "channel": "pre-integration-development",
+        "github_prerelease": True,
+        "release_version": "1.7.19-0.10.2",
+    }
     assert value["follow_up_issue"].endswith("/issues/21")
     assert value["coverage"] == {
         "line_percent": 90.44,
@@ -269,7 +282,9 @@ def test_sphinx_config_excludes_documented_local_venv() -> None:
 
 def test_shipped_gsn_does_not_claim_the_blocked_proposition() -> None:
     gsn = GSN.read_text()
-    assert "QUALIFICATION AND PUBLICATION: BLOCK" in gsn
+    assert "QUALIFICATION PUBLICATION: BLOCK" in gsn
+    assert "pre-integration development prerelease" in gsn
+    assert "Qualification remains blocked" in gsn
     assert "sufficiently safe" not in gsn
     assert "All safety requirements are verified" not in gsn
     assert "does not invoke undefined behavior for any" not in gsn

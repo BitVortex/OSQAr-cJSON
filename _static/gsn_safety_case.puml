@@ -10,7 +10,7 @@ skinparam rectangle {
   BackgroundColor #FFCDD2
 }
 
-rectangle "**QUALIFICATION AND PUBLICATION: BLOCK**\n\nCandidate integration is permitted only with documented deviations.\nThis is not a qualification, compliance, certification, or release claim." as BLOCKED
+rectangle "**QUALIFICATION PUBLICATION: BLOCK**\n\n1.7.19-0.10.2 may be published only as a pre-integration development prerelease.\nQualification remains blocked; this is not a compliance or certification claim." as BLOCKED
 
 note right of BLOCKED
   QF-01: 15 complexity/function-length findings remain.

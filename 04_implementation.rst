@@ -96,8 +96,10 @@ executes the separate fail-closed policy checker:
 The checker fails closed if any activity result, metric, finding, deviation, or
 violation differs from policy. Its ``PASS`` means only that the documented
 blocked candidate is internally consistent enough to integrate for continued
-work; it cannot promote evidence, authorize publication, or establish component
-qualification.
+work. Policy version 2 additionally authorizes ``1.7.19-0.10.2`` only as a
+pre-integration development prerelease. The checker cannot promote evidence,
+authorize publication as a qualified component package, or establish component
+qualification; qualification remains blocked.
 
 Integration boundary
 --------------------

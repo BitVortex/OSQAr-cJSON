@@ -82,7 +82,13 @@
       "qualification_effect": "unresolved; does not support qualification acceptance"
     }
   ],
-  "publication_authorized": false,
+  "development_release": {
+    "authorized": true,
+    "channel": "pre-integration-development",
+    "github_prerelease": true,
+    "release_version": "1.7.19-0.10.2"
+  },
+  "qualification_publication_authorized": false,
   "qualification_claimed": false,
   "required_framework_failures": [
     "activity test-suite: evidence is not approved (validated)",
@@ -105,5 +111,5 @@
     "activity reproducible-build: evidence is not approved (validated)",
     "gap independent-exact-tree-review: required gap remains open"
   ],
-  "schema": "osqar-cjson.candidate-integration-policy.v1"
+  "schema": "osqar-cjson.candidate-integration-policy.v2"
 }
