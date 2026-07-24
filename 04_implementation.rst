@@ -21,7 +21,7 @@ From a checkout with initialized submodules:
 
 .. code-block:: console
 
-   ./build-and-test.sh all --source-revision "$(git rev-parse HEAD)"
+   ./build-and-test.sh all --source-revision "$(git rev-parse HEAD:cjson-source)"
 
 The shell frontend delegates to ``tools/qualification.py``. The runner creates
 a clean configuration-specific build directory, checks every subprocess return

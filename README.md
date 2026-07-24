@@ -1,6 +1,6 @@
 # OSQAr-cJSON — bounded software-component qualification attempt
 
-[![Qualification CI](https://github.com/BitVortex/OSQAr-cJSON/actions/workflows/qualification.yml/badge.svg)](https://github.com/BitVortex/OSQAr-cJSON/actions/workflows/qualification.yml)
+[![Qualification CI](https://github.com/BitVortex/OSQAr-cJSON/actions/workflows/ci.yml/badge.svg)](https://github.com/BitVortex/OSQAr-cJSON/actions/workflows/ci.yml)
 [![OSQAr](https://img.shields.io/badge/OSQAr-v0.10.2-blue)](https://github.com/BitVortex/OSQAr/releases/tag/v0.10.2)
 [![cJSON](https://img.shields.io/badge/cJSON-v1.7.19-green)](https://github.com/DaveGamble/cJSON/releases/tag/v1.7.19)
 
