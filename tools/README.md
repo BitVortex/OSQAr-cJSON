@@ -49,7 +49,10 @@ ignored by Git. Every report, log, JUnit file, and result file has an adjacent
 `.provenance.json` sidecar containing its SHA-256, the source revision,
 configuration SHA-256 and full configuration, tool versions, activity history,
 and final result. JUnit contains one testcase per Unity case and reconciled
-suite counters. The pinned upstream suite contains one C89-era `TEST_IGNORE`
+suite counters. The runner also executes 30 assurance-owned supplemental scenarios
+covering malformed inputs, API edge cases, and deterministic allocation-failure
+injection; these remain separate from the fixed upstream Unity inventory. The
+pinned upstream suite contains one C89-era `TEST_IGNORE`
 for non-finite numbers. The runner creates a build-directory-only C99 adaptation
 that executes that case with `NAN`, positive infinity, and negative infinity;
 the pinned submodule remains unchanged and ignored cases are rejected.

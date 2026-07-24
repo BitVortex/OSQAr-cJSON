@@ -43,5 +43,11 @@ not partial positive evidence.
 Current release decision
 ------------------------
 
-**BLOCKED until fresh execution and independent review.** See the controlled
-gap register in :doc:`06_lifecycle_management`.
+**BLOCKED.** A fresh candidate execution passed the upstream and supplemental
+scenario runs, sanitizer execution, coverage thresholds, compiler warning audit,
+and reproducibility comparison. It failed the configured complexity and Cppcheck
+gates. OSQAr qualification-profile validation consequently returned ``FAIL``;
+the generated evidence also remains unapproved pending independent exact-tree
+review. The exact finding inventory and required dispositions are recorded in
+``assurance/reviews/qualification-gate-disposition.md``. No shipment, release
+manifest, tag, or publication may be produced from this state.

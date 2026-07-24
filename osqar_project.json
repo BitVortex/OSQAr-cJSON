@@ -1,96 +1,206 @@
 {
   "version": "1.7.19",
+  "profile": "qualification",
+  "source_revision": "c859b25da02955fef659d658b8f324b5cde87be3",
+  "configuration_id": "osqar-cjson-qualification-runner-v1",
+  "configuration_sha256": "661fa0598d7b1c83a8feb3ff5938bec73f092ed69713aecfce96dbfe61dd991c",
   "origin": {
     "vcs": "git",
     "url": "https://github.com/DaveGamble/cJSON",
     "tag": "v1.7.19"
   },
   "commands": {
-    "build": "cd cjson-source && make CC='gcc -std=c99' CJSON_TEST=0",
-    "test": "cd cjson-source && gcc -std=c99 -g -O1 -I. -Itests tests/*.c cJSON.c -lm -o test_runner && ./test_runner",
-    "docs": "python3 -m sphinx -b html -W . _build/html",
-    "static-analysis": "cppcheck --enable=all --inconclusive --suppress=missingIncludeSystem -I. cJSON.c cJSON_Utils.c"
+    "build": "./build-and-test.sh reproducible",
+    "test": "./build-and-test.sh all",
+    "docs": "python -m sphinx -b html -W . _build/html"
+  },
+  "standards": {
+    "catalogs": [
+      {
+        "id": "iso26262-2018",
+        "source": "package:osqar_data/standards/iso26262_reference_catalog.json"
+      }
+    ]
   },
   "verification": {
     "run": [
       {
         "id": "test-suite",
-        "label": "Test Suite (Release Build)",
+        "label": "Pinned upstream Unity suite and supplemental qualification scenarios",
+        "required": true,
+        "applicability": "applicable",
         "command": "./build-and-test.sh test",
-        "report": "test_results.xml"
+        "status": "passed",
+        "activity_state": "completed",
+        "activity_history": ["planned", "ready", "running", "completed"],
+        "evidence_state": "validated",
+        "source_revision": "c859b25da02955fef659d658b8f324b5cde87be3",
+        "configuration_id": "osqar-cjson-qualification-runner-v1",
+        "configuration_sha256": "661fa0598d7b1c83a8feb3ff5938bec73f092ed69713aecfce96dbfe61dd991c",
+        "tool": {"name": "qualification.py + GCC", "version": "schema 1 / GCC 14.2.0", "available": true},
+        "environment": {"os": "Linux", "language": "C99", "python": "3.11.15"},
+        "report": "_build/evidence/test/result.junit.xml",
+        "report_sha256": "f3783b60eb4fbf1c6232a4bf516f2927ecc31bad8b8087d852d3bb53ce94b635",
+        "report_format": "junit-xml",
+        "findings": [],
+        "thresholds": [
+          {"metric": "upstream-unity-cases-passed", "operator": "==", "observed": 162, "target": 162},
+          {"metric": "supplemental-scenarios-passed", "operator": "==", "observed": 30, "target": 30}
+        ]
       },
       {
         "id": "sanitizer",
-        "label": "Sanitizer Run (ASan+UBSan)",
+        "label": "ASan and UBSan instrumented component and harness execution",
+        "required": true,
+        "applicability": "applicable",
         "command": "./build-and-test.sh sanitizer",
-        "report": "_build/evidence/asan_report.txt"
+        "status": "passed",
+        "activity_state": "completed",
+        "activity_history": ["planned", "ready", "running", "completed"],
+        "evidence_state": "validated",
+        "source_revision": "c859b25da02955fef659d658b8f324b5cde87be3",
+        "configuration_id": "osqar-cjson-qualification-runner-v1",
+        "configuration_sha256": "661fa0598d7b1c83a8feb3ff5938bec73f092ed69713aecfce96dbfe61dd991c",
+        "tool": {"name": "GCC ASan+UBSan", "version": "14.2.0", "available": true},
+        "environment": {"os": "Linux", "language": "C99", "leak-detection": true},
+        "report": "_build/evidence/sanitizer/result.junit.xml",
+        "report_sha256": "25e345ac6aac56c7b1d78b1538fa0850c7f37d3936afb2d6e1c8690b3ad2bfc2",
+        "report_format": "junit-xml",
+        "findings": [],
+        "thresholds": [{"metric": "sanitizer-findings", "operator": "==", "observed": 0, "target": 0}]
       },
       {
         "id": "coverage",
-        "label": "Coverage (gcov)",
+        "label": "Line and branch coverage over both component translation units",
+        "required": true,
+        "applicability": "applicable",
         "command": "./build-and-test.sh coverage",
-        "report": "**/*.gcov"
+        "status": "passed",
+        "activity_state": "completed",
+        "activity_history": ["planned", "ready", "running", "completed"],
+        "evidence_state": "validated",
+        "source_revision": "c859b25da02955fef659d658b8f324b5cde87be3",
+        "configuration_id": "osqar-cjson-qualification-runner-v1",
+        "configuration_sha256": "661fa0598d7b1c83a8feb3ff5938bec73f092ed69713aecfce96dbfe61dd991c",
+        "tool": {"name": "gcovr", "version": "7.2", "available": true},
+        "environment": {"os": "Linux", "compiler": "GCC 14.2.0", "scope": "cJSON.c,cJSON_Utils.c"},
+        "report": "_build/evidence/coverage/result.junit.xml",
+        "report_sha256": "e666311e40c3ee79448f9df6a81cf038ecc9de6ab2aaf1525b4021a50d9cdfd7",
+        "report_format": "junit-xml",
+        "findings": [],
+        "thresholds": [
+          {"metric": "line-coverage-percent", "operator": ">=", "observed": 90.44, "target": 90.0},
+          {"metric": "branch-coverage-percent", "operator": ">=", "observed": 80.26, "target": 80.0}
+        ]
       },
       {
         "id": "complexity",
-        "label": "Complexity (lizard / McCabe)",
+        "label": "Lizard complexity and function-length analysis",
+        "required": true,
+        "applicability": "applicable",
         "command": "./build-and-test.sh complexity",
-        "report": "complexity_report.txt"
+        "status": "failed",
+        "activity_state": "failed",
+        "activity_history": ["planned", "ready", "running", "failed"],
+        "evidence_state": "generated",
+        "source_revision": "c859b25da02955fef659d658b8f324b5cde87be3",
+        "configuration_id": "osqar-cjson-qualification-runner-v1",
+        "configuration_sha256": "661fa0598d7b1c83a8feb3ff5938bec73f092ed69713aecfce96dbfe61dd991c",
+        "tool": {"name": "lizard", "version": "1.17.10", "available": true},
+        "environment": {"os": "Linux", "language": "C99", "functions-measured": 154},
+        "report": "_build/evidence/complexity/result.junit.xml",
+        "report_sha256": "875eabf0e3f878ae7e962b91c9960782ab98935b8e3ce0281eaf408b2ab7c666",
+        "report_format": "junit-xml",
+        "findings": [{"id": "QF-01", "status": "open", "rationale": "15 functions exceed one or both enforced limits; see assurance/reviews/qualification-gate-disposition.md"}],
+        "thresholds": [
+          {"metric": "maximum-cyclomatic-complexity", "operator": "<=", "observed": 37, "target": 15},
+          {"metric": "maximum-function-length", "operator": "<=", "observed": 230, "target": 100}
+        ]
+      },
+      {
+        "id": "warnings",
+        "label": "Strong C99 compiler warning audit",
+        "required": true,
+        "applicability": "applicable",
+        "command": "./build-and-test.sh warnings",
+        "status": "passed",
+        "activity_state": "completed",
+        "activity_history": ["planned", "ready", "running", "completed"],
+        "evidence_state": "validated",
+        "source_revision": "c859b25da02955fef659d658b8f324b5cde87be3",
+        "configuration_id": "osqar-cjson-qualification-runner-v1",
+        "configuration_sha256": "661fa0598d7b1c83a8feb3ff5938bec73f092ed69713aecfce96dbfe61dd991c",
+        "tool": {"name": "GCC", "version": "14.2.0", "available": true},
+        "environment": {"os": "Linux", "language": "C99", "warnings-as-errors": true},
+        "report": "_build/evidence/warnings/result.junit.xml",
+        "report_sha256": "42a4e141c8f9df36c4e165055c917dad319011988906427a5c79f9bfc8148a5a",
+        "report_format": "junit-xml",
+        "findings": [],
+        "thresholds": [{"metric": "compiler-warnings", "operator": "==", "observed": 0, "target": 0}]
       },
       {
         "id": "static-analysis",
-        "label": "Static Analysis (cppcheck)",
+        "label": "Cppcheck static analysis",
+        "required": true,
+        "applicability": "applicable",
         "command": "./build-and-test.sh static-analysis",
-        "report": "_build/evidence/cppcheck_report.xml"
-      },
-      {
-        "id": "warn-audit",
-        "label": "Compiler Warning Audit (-Werror)",
-        "command": "./build-and-test.sh all",
-        "report": "_build/evidence/warn_audit_*.txt"
+        "status": "failed",
+        "activity_state": "failed",
+        "activity_history": ["planned", "ready", "running", "failed"],
+        "evidence_state": "generated",
+        "source_revision": "c859b25da02955fef659d658b8f324b5cde87be3",
+        "configuration_id": "osqar-cjson-qualification-runner-v1",
+        "configuration_sha256": "661fa0598d7b1c83a8feb3ff5938bec73f092ed69713aecfce96dbfe61dd991c",
+        "tool": {"name": "Cppcheck", "version": "2.17.1", "available": true},
+        "environment": {"os": "Linux", "language": "C99", "enable": "all,inconclusive"},
+        "report": "_build/evidence/static-analysis/result.junit.xml",
+        "report_sha256": "1ebfeb389623daa6a80c71d479de96dd0c6402e6efc00b75b279259aee71c72c",
+        "report_format": "junit-xml",
+        "findings": [{"id": "QF-02", "status": "open", "rationale": "17 Cppcheck error/warning findings remain; see assurance/reviews/qualification-gate-disposition.md"}],
+        "thresholds": [{"metric": "cppcheck-error-warning-findings", "operator": "==", "observed": 17, "target": 0}]
       },
       {
         "id": "reproducible-build",
-        "label": "Reproducible Build Verification",
+        "label": "Two-clean-build exact artifact comparison",
+        "required": true,
+        "applicability": "applicable",
         "command": "./build-and-test.sh reproducible",
-        "report": "_build/evidence/reproducible_report.txt"
+        "status": "passed",
+        "activity_state": "completed",
+        "activity_history": ["planned", "ready", "running", "completed"],
+        "evidence_state": "validated",
+        "source_revision": "c859b25da02955fef659d658b8f324b5cde87be3",
+        "configuration_id": "osqar-cjson-qualification-runner-v1",
+        "configuration_sha256": "661fa0598d7b1c83a8feb3ff5938bec73f092ed69713aecfce96dbfe61dd991c",
+        "tool": {"name": "GCC + GNU ar", "version": "14.2.0 / 2.44", "available": true},
+        "environment": {"os": "Linux", "language": "C99", "source-date-epoch": 0},
+        "report": "_build/evidence/reproducible/result.junit.xml",
+        "report_sha256": "5137f437f4b6ad62da3d2311f293aeac1b136732115a3901d0543afe80d62541",
+        "report_format": "junit-xml",
+        "findings": [],
+        "thresholds": [{"metric": "artifact-hash-mismatches", "operator": "==", "observed": 0, "target": 0}]
       }
     ],
     "gaps": {
-      "valgrind": {
-        "activity": "Valgrind/Memcheck",
-        "status": "not_run",
-        "reason": "tooling_constraint",
-        "description": "Memory leak and use-after-free detection via Valgrind on the full test suite with debug symbols and suppression of known false positives.",
-        "mitigation": "ASan+UBSan covers most memory errors (heap out-of-bounds, use-after-free, stack buffer overflow). Leak detection provided by ASan LeakSanitizer."
+      "independent-exact-tree-review": {
+        "required": true,
+        "status": "open",
+        "description": "Independent expert and functional-safety review of the exact candidate tree has not been completed."
       },
-      "fuzzing": {
-        "activity": "Fuzzing Campaign (AFL++ / libFuzzer)",
-        "status": "not_run",
-        "reason": "tooling_constraint",
-        "description": "24-hour minimum fuzzing campaign targeting the cJSON parser entry point (cJSON_Parse) to discover crashes, hangs, and assertion failures.",
-        "mitigation": "All parser code paths are exercised by the existing unit test suite (1,000+ tests with edge cases). ASan+UBSan instrumentation detects UB and memory errors missed by fuzzing."
+      "fuzzing-campaign": {
+        "required": false,
+        "status": "open",
+        "description": "No bounded fuzzing campaign is claimed by this candidate."
       },
-      "misra": {
-        "activity": "MISRA C:2012 Compliance",
-        "status": "deferred",
-        "reason": "commercial_tool_required",
-        "description": "Full MISRA C:2012 compliance check using a certified MISRA checker tool. cJSON is written in C99 and uses constructs (e.g., pointer function tables, certain casts) that may require MISRA deviations.",
-        "mitigation": "Compiler warning audit with -Werror -Wall -Wextra -Wpedantic -Wconversion provides a strong baseline. Known MISRA deviations (e.g., pointer function tables in parse_value, double-to-int casts in print_number) are documented and justified. A deviation record is maintained for integrator review."
+      "misra-assessment": {
+        "required": false,
+        "status": "open",
+        "description": "No MISRA C compliance assessment is claimed by this candidate."
       },
-      "mcdc": {
-        "activity": "MC/DC Coverage",
-        "status": "deferred",
-        "reason": "commercial_tool_required",
-        "description": "Modified Condition/Decision Coverage (MC/DC) measurement required for ASIL D per ISO 26262-6 Table 12. Requires a certified coverage tool (e.g., LDRA, VectorCAST).",
-        "mitigation": "Statement (91.7%) and branch (83.3%) coverage achieved via gcov. All uncovered branches are in defensive error-recovery paths. Branch coverage provides a conservative estimate — MC/DC would likely achieve higher coverage on the same test suite. A commercial tool is planned for formal MC/DC measurement in a future qualification cycle."
-      },
-      "rfc-conformance": {
-        "activity": "RFC Conformance Validation",
-        "status": "partial",
-        "reason": "schedule_constraint",
-        "description": "Full validation of cJSON output against RFC 8259 (JSON), RFC 6902 (JSON Patch), and RFC 6901 (JSON Pointer) using an independent JSON schema validator across all test vectors.",
-        "mitigation": "cJSON's test suite includes dedicated RFC test files (json-patch-tests/ and tests/). Output is validated against expected values but not against an independent schema validator. The parser is widely used in production (10,000+ GitHub stars) providing de-facto RFC conformance."
+      "mc-dc-coverage": {
+        "required": false,
+        "status": "open",
+        "description": "No MC/DC measurement is claimed by this candidate."
       }
     }
   }
