@@ -1,122 +1,125 @@
-# OSQAr-cJSON — ISO 26262 ASIL D SEooC Qualification
+# OSQAr-cJSON — bounded software-component qualification attempt
 
-[![CI](https://github.com/BitVortex/OSQAr-cJSON/actions/workflows/ci.yml/badge.svg)](https://github.com/BitVortex/OSQAr-cJSON/actions/workflows/ci.yml)
-[![OSQAr](https://img.shields.io/badge/OSQAr-v0.9.0-blue)](https://github.com/BitVortex/OSQAr/releases/tag/v0.9.0)
+[![Qualification CI](https://github.com/BitVortex/OSQAr-cJSON/actions/workflows/qualification.yml/badge.svg)](https://github.com/BitVortex/OSQAr-cJSON/actions/workflows/qualification.yml)
+[![OSQAr](https://img.shields.io/badge/OSQAr-v0.10.2-blue)](https://github.com/BitVortex/OSQAr/releases/tag/v0.10.2)
 [![cJSON](https://img.shields.io/badge/cJSON-v1.7.19-green)](https://github.com/DaveGamble/cJSON/releases/tag/v1.7.19)
-[![Release](https://img.shields.io/badge/release-1.7.19--0.9.0-orange)](https://github.com/BitVortex/OSQAr-cJSON/releases/tag/1.7.19-0.9.0)
-[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-brightgreen)](https://bitvortex.github.io/OSQAr-cJSON/)
 
-> ⚠️ **RESEARCH REPOSITORY — NO WARRANTY**  
-> This is an **active research repository** for agentic qualification of open-source software for cyber-physical systems. The OSQAr framework and all qualification artifacts herein are produced by autonomous AI agents in a research setting. **Information may be inconsistent, outdated, incomplete, or just plain wrong.** No warranty, express or implied, is provided. No liability is assumed for any use of this material in safety-critical contexts. This qualification has **not** been reviewed or approved by any accredited certification body. Do **not** use in production safety systems without independent expert review.
+> **RESEARCH ARTIFACT — CURRENT DECISION: BLOCK**
+>
+> This repository applies OSQAr v0.10.2 to a bounded qualification attempt for
+> cJSON v1.7.19. It is not a certification, ISO 26262 compliance statement,
+> ASIL allocation, or claim that cJSON is qualified for an automotive item.
+> Item-specific suitability, tool confidence, assumptions of use, anomaly
+> disposition, and independent qualification verification remain unresolved.
 
----
+## Scope
 
-cJSON v1.7.19 qualification attempt targeting ISO 26262 ASIL D as a Safety Element out of Context (SEooC) using the [OSQAr](https://github.com/BitVortex/OSQAr) (Open Safety Qualification Architecture) framework.
+The primary process framing is **ISO 26262-8:2018, Clause 12** (qualification of
+software components). ISO 26262-6 verification techniques support the evidence
+but do not replace the Part 8 intended-use and qualification-verification
+obligations.
 
-## Referenced Components
+- **Component baseline:** cJSON tag `v1.7.19`, git object
+  `c859b25da02955fef659d658b8f324b5cde87be3`.
+- **In-scope implementation:** `cJSON.c` and `cJSON.h`, with the configuration
+  stated in `01_requirements.rst`.
+- **Outside the claim:** cJSON Utils, packaging/CMake integration,
+  locale-enabled behavior, custom allocator behavior, concurrency of mutable
+  trees, and item-specific resource/timing properties.
+- **Target:** ASIL D verification rigor. This is a target for the evidence
+  workflow, not an achieved qualification status.
 
-| Component | Repository | Pinned Version |
-|-----------|-----------|---------------|
-| **OSQAr** | [BitVortex/OSQAr](https://github.com/BitVortex/OSQAr) | [`v0.9.0`](https://github.com/BitVortex/OSQAr/releases/tag/v0.9.0) |
-| **cJSON** | [DaveGamble/cJSON](https://github.com/DaveGamble/cJSON) | [`v1.7.19`](https://github.com/DaveGamble/cJSON/releases/tag/v1.7.19) |
+The utilities source and tests are still built as regression context; that does
+not silently extend the claim boundary.
 
-## Releases
+## What changed for OSQAr v0.10.2
 
-Tagged releases follow the format **`cjson_version-osqar_version`** (e.g., `1.7.19-0.9.0`). Each release is a CI-generated auditable shipment containing:
+- fail-closed native test/evidence execution;
+- component-instrumented ASan/UBSan builds;
+- exact Unity executable/case inventory with reconciled JUnit;
+- live, parsed coverage, complexity, compiler-warning, static-analysis, and
+  reproducibility evidence;
+- source/configuration-bound activity provenance;
+- typed directed traceability (`allocated_to`, `realized_by`, `verified_by`,
+  `produces`, and `evidenced_by`);
+- qualification-profile framework and traceability gates;
+- an operational assumptions-of-use protocol and controlled Clause 12 gaps;
+- hash-locked Python qualification dependencies; and
+- an exact-inventory `OSQAR-RELEASE-MANIFEST.json` for candidate shipments.
 
-| Asset | Description |
-|-------|------------|
-| `osqar_cjson_shipment.zip` | Full evidence bundle: Sphinx HTML docs, `needs.json`, `traceability_report.json`, `SHA256SUMS` + GPG signature, `traceability_matrix.xlsx`, test results, coverage, complexity, sanitizer logs, cJSON source baseline |
-| `osqar_cjson_shipment.zip.sha256` | SHA-256 of the shipment ZIP for downstream integrity verification |
+The full pre-revision findings are retained in
+[`assurance/reviews/pre-v0.10.2-baseline-review.md`](assurance/reviews/pre-v0.10.2-baseline-review.md).
 
-**[Latest release →](https://github.com/BitVortex/OSQAr-cJSON/releases/latest)**
+## Reproduce the candidate evidence
 
-## Qualification Summary
-
-- **56 needs** across 7 documents: 12 requirements, 7 architecture elements, 14 verification activities (13 VER_ + 1 TEST_), 4 implementation items, 10 safety case items, 9 lifecycle items
-- **GSN safety case** with 4 safety goals argued over parsing safety, memory safety, undefined behavior freedom, and verification completeness — rendered via PlantUML in documentation
-- **v1.0 requirement baseline** archived via `osqar baseline` for change management
-- **XLSX traceability matrix** exported for spreadsheet-based review
-- **Impact analysis** available on all requirements via `osqar impact`
-- **102 bidirectional links**, **zero traceability violations** — verified via `osqar traceability --test-prefix VER_ --code-prefix IMPL_`
-- **cJSON builds with `-Werror -Wall -Wextra -Wconversion`** — zero warnings across 5,066 LOC
-- **162 Unity tests** across 21 executables — all pass under ASan+UBSan instrumentation
-- **Sphinx HTML** built with PlantUML architecture diagrams, zero warnings
-- **GPG-signed SHA256SUMS manifest** for shipment integrity verification
-- **CI pipeline** on every push and tag: build → test → sanitize → coverage → docs → traceability → impact → baseline → XLSX → shipment → release
-
-## Quickstart
-
-### Clone and build
+Prerequisites are Python 3.11+, a C99 compiler/toolchain, `ar`, and `uv` (or an
+equivalent hash-verifying installer).
 
 ```bash
 git clone --recurse-submodules https://github.com/BitVortex/OSQAr-cJSON.git
 cd OSQAr-cJSON
-./build-and-test.sh all
+
+uv venv --python 3.11 .venv
+uv pip sync --python .venv/bin/python requirements.lock
+export PATH="$PWD/.venv/bin:$PATH"
+
+pytest -q
+./build-and-test.sh all --source-revision "$(git rev-parse HEAD:cjson-source)"
+sphinx-build -W --keep-going -b html . _build/html
 ```
 
-### Rebuild documentation
+Run the OSQAr gates with the source revision and configuration SHA-256 emitted
+by the native runner:
 
 ```bash
-python3 -m pip install -r requirements-docs.txt
+osqar framework validate \
+  --project osqar_project.json \
+  --profile qualification \
+  --source-revision "$(git rev-parse HEAD:cjson-source)" \
+  --configuration-sha256 "$CONFIGURATION_SHA256" \
+  --report-json _build/evidence/framework-report.json
 
-# With PlantUML diagrams
-python3 -m sphinx -b html -W . _build/html
-
-# Without diagrams (offline)
-OSQAR_NO_DIAGRAMS=1 python3 -m sphinx -b html . _build/html
-
-# Verify traceability (custom need-ID prefixes)
 osqar traceability _build/html/needs.json \
-  --test-prefix VER_ --code-prefix IMPL_
+  --profile qualification \
+  --evidence-project osqar_project.json \
+  --source-revision "$(git rev-parse HEAD:cjson-source)" \
+  --configuration-sha256 "$CONFIGURATION_SHA256" \
+  --json-report _build/evidence/traceability-report.json
 ```
 
-## Repository Structure
+Do not replace a failed gate with an unvalidated file or weaken a threshold to
+obtain a pass. The runner documentation is in
+[`tools/README.md`](tools/README.md).
 
-```
-.
-├── 01_requirements.rst            # 12 safety requirements (REQ_*)
-├── 02_architecture.rst            # 7 architecture elements + 3 PlantUML diagrams (ARCH_*)
-├── 03_verification.rst            # 14 verification activities (VER_*)
-├── 04_implementation.rst          # Source inventory, build config (IMPL_*)
-├── 05_test_results.rst            # Test results, coverage, static analysis
-├── 06_lifecycle_management.rst    # AoUs, CM baseline, issue management (LM_*)
-├── 07_safety_case.rst             # GSN safety case with 10 safety-case needs (SC_*)
-├── index.rst                      # Master toctree + qualification summary
-├── conf.py                        # Sphinx config (_NO_DIAGRAMS guard, PlantUML detection)
-├── osqar_project.json             # Commands + verification.gaps + verification.run
-├── build-and-test.sh              # Qualification build & test pipeline
-├── cjson-source/                  # cJSON v1.7.19 (git submodule, pinned commit)
-├── _static/                       # PlantUML sources (.puml), gap docs, custom CSS
-├── .github/workflows/ci.yml       # CI pipeline: build → test → docs → shipment → release
-├── _build/                        # CI-generated: Sphinx HTML, needs.json
-└── _shipment/                     # CI-generated: evidence bundle + SHA256SUMS
-```
+## Evidence interpretation
 
-## Verification Activities
+A technical activity can pass while the overall qualification decision remains
+BLOCK. OSQAr framework or typed-traceability PASS means only that the declared
+machine-checkable profile rules passed for the supplied immutable inputs. It
+does not establish semantic adequacy, ISO 26262 compliance, certification, or
+item-specific safety.
 
-### Executed in CI pipeline
+No archive may be represented as a qualified component package while a required
+activity, manifest check, controlled gap, or independent exact-tree review is
+BLOCK.
 
-| # | Activity | Status |
-|---|----------|--------|
-| 1 | Compiler warning audit (`-Werror`) | ✅ Zero warnings |
-| 2 | Test suite (162 Unity tests) | ✅ PASS |
-| 3 | ASan+UBSan instrumentation | ✅ Clean |
-| 4 | Stack depth verification (nesting limit 1000) | ✅ Enforced |
-| 5 | NULL-pointer safety (all 78 API functions) | ✅ Deterministic |
-| 6 | Coverage measurement (gcov/gcovr) | ✅ In pipeline |
-| 7 | Complexity analysis (lizard, McCabe) | ✅ In pipeline |
-| 8 | Static analysis (cppcheck) | ✅ In pipeline |
-| 9 | Reproducible build verification | ✅ Bit-identical (SHA256) |
+## Repository map
 
-### Planned — tracked as GitHub issues
+- `01_requirements.rst` — bounded component and intended-use specification
+- `02_architecture.rst` — typed architecture/API allocation
+- `03_verification.rst` — required activities and candidate evidence bindings
+- `04_implementation.rst` — source/build/configuration identity
+- `05_test_results.rst` — evidence reconciliation and promotion rules
+- `06_lifecycle_management.rst` — AoU protocol and controlled gap register
+- `07_safety_case.rst` — explicit BLOCK argument and release decision
+- `tools/qualification.py` — fail-closed native evidence runner
+- `tests/` — parser, inventory, failure, and executable fault-seed regressions
+- `requirements.lock` — hash-locked OSQAr v0.10.2 tool environment
+- `assurance/reviews/` — immutable review records
 
-| # | Activity | Issue |
-|---|----------|-------|
-| 10 | Valgrind/Memcheck | [#5](https://github.com/BitVortex/OSQAr-cJSON/issues/5) |
-| 11 | Fuzzing campaign (AFL++/libFuzzer, 24h) | [#6](https://github.com/BitVortex/OSQAr-cJSON/issues/6) |
-| 12 | MISRA C:2012 compliance | [#7](https://github.com/BitVortex/OSQAr-cJSON/issues/7) — commercial tool |
-| 13 | MC/DC coverage (ASIL D) | [#8](https://github.com/BitVortex/OSQAr-cJSON/issues/8) — commercial tool |
-| 14 | RFC conformance (independent validator) | [#9](https://github.com/BitVortex/OSQAr-cJSON/issues/9) |
+## Licence and upstream source
 
-Gaps are documented with structured status/reason/mitigation in `osqar_project.json` → `verification.gaps` (OSQAr v0.8.1 feature) and rendered in the Sphinx HTML documentation per ISO 26262-8 §11.4.8.
+This repository's assurance material follows its declared repository licence.
+The cJSON and Unity submodules retain their respective upstream licences. No
+warranty is provided; independently assess all material before safety-related
+use.

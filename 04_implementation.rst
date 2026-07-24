@@ -5,7 +5,7 @@ Source identity
 ---------------
 
 The component source is an unmodified git submodule pinned to
-``c859b25d3b25fe44d3c99dc56dce35bdd55a8a8f`` (upstream cJSON ``v1.7.19``).
+``c859b25da02955fef659d658b8f324b5cde87be3`` (upstream cJSON ``v1.7.19``).
 The Unity test framework is pinned independently. A qualification result is
 valid only for these exact git objects and the configuration identified in its
 evidence provenance.

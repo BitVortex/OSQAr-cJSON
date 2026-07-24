@@ -19,7 +19,7 @@ Identified component and configuration
 --------------------------------------
 
 **Component identity:** upstream cJSON tag ``v1.7.19`` at git object
-``c859b25d3b25fe44d3c99dc56dce35bdd55a8a8f``.
+``c859b25da02955fef659d658b8f324b5cde87be3``.
 
 **In-scope implementation:** ``cjson-source/cJSON.c`` and
 ``cjson-source/cJSON.h`` with ``ENABLE_LOCALES`` not defined and the default

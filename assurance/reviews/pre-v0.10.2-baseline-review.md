@@ -1,8 +1,9 @@
 # Pre-revision baseline review for OSQAr v0.10.2
 
-**Review subject:** `OSQAr-cJSON` commit `d73c092f5f8feb60e29a54f5d46ccb8b09127a58`  
-**Component baseline:** `cjson-source` gitlink `c859b25d3b25fe44d3c99dc56dce35bdd55a8a8f` (upstream tag `v1.7.19`)  
-**OSQAr target:** version `0.10.2`, source commit `4003c4046b13610328d268f7c07de3140d97bf4a`  
+**Review subject:** `OSQAr-cJSON` commit `d73c092f14a3429076fdced06fa8c45c72647631`
+**Review tree:** `0e6a3184400b1c0bf2cf321c493d25f220b317cb`
+**Component baseline:** `cjson-source` gitlink `c859b25da02955fef659d658b8f324b5cde87be3` (upstream tag `v1.7.19`)
+**OSQAr target:** version `0.10.2`, source commit `4003c4041d7cb273bec78d95fb8980b2d0bb013f`
 **Review date:** 2026-07-24  
 **Review type:** full pre-revision repository and shipped-artifact review
 
