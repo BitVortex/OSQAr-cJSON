@@ -392,6 +392,27 @@ class Runner:
             )
         return build, inventory
 
+    def run_qualification_scenarios(
+        self,
+        activity: str,
+        build: Path,
+        flags: Sequence[str],
+        objects: Sequence[Path],
+        env: dict[str, str] | None = None,
+    ) -> None:
+        scenario_executable = build / "component_qualification_scenarios"
+        self.command([
+            self.require_tool(self.cc), "-std=c99", *flags,
+            "-I", str(self.source),
+            str(self.root / "tests" / "component_qualification_scenarios.c"),
+            *(str(obj) for obj in objects), "-lm", "-o", str(scenario_executable),
+        ])
+        self.command(
+            [str(scenario_executable)],
+            env=env,
+            log=self.evidence_root / activity / "logs" / "component_qualification_scenarios.txt",
+        )
+
     def execute_tests(
         self, activity: str, build: Path, env: dict[str, str] | None = None
     ) -> list[UnityRun]:
@@ -442,9 +463,11 @@ class Runner:
 
     def test(self) -> None:
         self.evidence_dir("test")
-        build, objects = self.compile_objects("test", ["-O2"])
-        self.build_tests("test", ["-O2"], objects)
+        flags = ["-O2"]
+        build, objects = self.compile_objects("test", flags)
+        self.build_tests("test", flags, objects)
         self.execute_tests("test", build)
+        self.run_qualification_scenarios("test", build, flags, objects)
 
     def sanitizer(self) -> None:
         self.evidence_dir("sanitizer")
@@ -458,6 +481,7 @@ class Runner:
         env["ASAN_OPTIONS"] = "detect_leaks=1:halt_on_error=1"
         env["UBSAN_OPTIONS"] = "halt_on_error=1:print_stacktrace=1"
         self.execute_tests("sanitizer", build, env)
+        self.run_qualification_scenarios("sanitizer", build, flags, objects, env)
 
     def warnings(self) -> None:
         evidence = self.evidence_dir("warnings")
@@ -477,6 +501,7 @@ class Runner:
         build, objects = self.compile_objects("coverage", flags)
         self.build_tests("coverage", flags, objects)
         self.execute_tests("coverage", build)
+        self.run_qualification_scenarios("coverage", build, flags, objects)
         json_path = evidence / "coverage.json"
         text_path = evidence / "coverage.txt"
         common = [
