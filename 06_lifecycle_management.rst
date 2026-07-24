@@ -80,9 +80,12 @@ Change and baseline control
 
 Every change to the source gitlink, runner, qualification policy, requirement,
 AoU, accepted deviation, tool version, or generated shipment invalidates the
-previous configuration identity. The evidence workflow shall then be rerun and
-the new exact tree independently reviewed. The upstream issue/anomaly state is
-reviewed at each release rather than copied forward as static prose.
+previous evidence baseline and exact-tree review. Such a change does not
+necessarily change the configuration SHA-256: that digest changes only when the
+static ``CONFIGURATION`` mapping in ``tools/qualification.py`` changes. The full
+evidence workflow shall still be rerun and the new exact tree independently
+reviewed. The upstream issue/anomaly state is reviewed at each release rather
+than copied forward as static prose.
 
 Tool-confidence boundary
 ------------------------

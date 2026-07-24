@@ -51,3 +51,51 @@ the generated evidence also remains unapproved pending independent exact-tree
 review. The exact finding inventory and required dispositions are recorded in
 ``assurance/reviews/qualification-gate-disposition.md``. No shipment, release
 manifest, tag, or publication may be produced from this state.
+
+Review tracking status
+----------------------
+
+Issue #21 was closed as not planned when the blocked research candidate was
+integrated. Its acceptance criteria were not completed: the evidence was not
+approved and no independent Clause 12 qualification approval was recorded. The
+`issue record <https://github.com/BitVortex/OSQAr-cJSON/issues/21>`_ remains in
+the candidate policy as a historical follow-up reference; issue closure is not
+evidence that its qualification gates passed. A future qualification attempt
+must open a new exact-tree review issue and bind its decision to that immutable
+tree.
+
+Measured baseline
+-----------------
+
+The controlled candidate policy and disposition record fix the current measured
+outcome as follows:
+
+- all 162 upstream Unity cases across 21 executables pass with no ignored case;
+- all 30 assurance-owned supplemental scenarios pass;
+- ASan/UBSan execution, the compiler warning audit, and the two-build
+  reproducibility comparison pass;
+- line coverage is 90.44% and branch coverage is 80.26%; these meet the local
+  mechanical thresholds, but MC/DC is not measured and coverage adequacy for the
+  qualification argument remains explicitly unaccepted;
+- 15 of 154 functions exceed the complexity or function-length policy, with
+  observed maxima of CCN 37 and 230 lines (QF-01); and
+- 17 Cppcheck error/warning findings remain open (QF-02).
+
+The CI policy expects ``test``, ``sanitizer``, ``coverage``, ``warnings``, and
+``reproducible`` to pass, and ``complexity`` and ``static-analysis`` to fail.
+Any different result is rejected rather than treated as automatically better:
+the exact evidence and policy must first be reviewed and updated together.
+
+Outstanding verification work
+-----------------------------
+
+The current runner does not complete Valgrind/Memcheck analysis, sustained
+fuzzing, MISRA C assessment with a suitable checker, MC/DC measurement, or an
+independent RFC-conformance validation. These activities are tracked in GitHub
+issues `#5 <https://github.com/BitVortex/OSQAr-cJSON/issues/5>`_ through
+`#9 <https://github.com/BitVortex/OSQAr-cJSON/issues/9>`_. Evidence approval,
+finding-specific dispositions, tool-confidence justification, intended-use and
+assumptions-of-use confirmation, anomaly disposition, and independent
+verification of the immutable final result also remain open. Until the
+applicable work is completed and accepted, the result remains BLOCK regardless
+of locally passing mechanical activities.

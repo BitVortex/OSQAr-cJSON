@@ -18,7 +18,14 @@ extensions = [
 ]
 
 templates_path = ["_templates"]
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "cjson-source", "unity"]
+exclude_patterns = [
+    "_build",
+    ".venv",
+    "Thumbs.db",
+    ".DS_Store",
+    "cjson-source",
+    "unity",
+]
 html_theme = "furo"
 html_static_path = ["_static"]
 html_title = "OSQAr-cJSON — bounded qualification attempt"

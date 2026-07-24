@@ -13,6 +13,19 @@ interfaces to the exact cJSON v1.7.19 core-source baseline. The primary process
 framing is ISO 26262-8:2018, Clause 12. Item-specific suitability and independent
 qualification verification remain mandatory.
 
+Current repository state
+------------------------
+
+The ``main`` branch contains a blocked research candidate with a separately
+controlled **candidate integration** decision. Its native evidence run passes
+unit and supplemental scenarios, sanitizers, coverage, compiler warnings, and
+reproducibility, but fails the configured complexity and static-analysis gates.
+Framework and traceability qualification profiles therefore also fail. CI is
+green only when it reproduces that exact blocked outcome and validates it against
+``assurance/candidate-integration-policy.json``; green CI is not a qualification
+or publication decision. See :doc:`05_test_results` for the measured results and
+remaining verification work.
+
 Contents
 --------
 
@@ -31,16 +44,30 @@ Contents
 Execution
 ---------
 
-Initialize the submodules and execute the one-command frontend:
+Create the documented Python 3.11 environment, install the hash-locked toolchain,
+initialize the submodules, and execute the one-command frontend:
 
 .. code-block:: console
 
+   uv venv --python 3.11 .venv
+   uv pip sync --python .venv/bin/python requirements.lock
+   export PATH="$PWD/.venv/bin:$PATH"
    git submodule update --init --recursive
    ./build-and-test.sh all --source-revision "$(git rev-parse HEAD:cjson-source)"
 
+The native runner additionally requires a C99 compiler, ``ar``, and sanitizer
+runtime support. The locked environment supplies OSQAr v0.10.2, Sphinx,
+Sphinx-Needs, pytest, gcovr, lizard, and Cppcheck. See :doc:`04_implementation`
+for selective native commands and the candidate-integration contract.
+
 Then run OSQAr v0.10.2 framework and traceability qualification profiles with the
-same source revision and generated configuration SHA-256. A failed activity or
-open controlled gap remains a BLOCK; do not weaken a policy to obtain a pass.
+same source revision and generated configuration SHA-256. On this baseline the
+native, framework, and traceability qualification commands are expected to return
+non-zero because controlled findings and unapproved evidence remain open. The CI
+workflow accepts integration only after ``tools/verify_candidate_integration.py``
+confirms that the complete generated failure inventory exactly matches the
+controlled candidate policy. An unexpected pass, failure, metric, finding, or
+traceability violation fails CI. Do not weaken a policy to obtain a pass.
 
 Baseline review
 ---------------

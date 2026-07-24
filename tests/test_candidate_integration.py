@@ -217,6 +217,56 @@ def test_ci_requires_exact_documented_block_before_passing() -> None:
     assert "assurance/candidate-integration-policy.json" in workflow
 
 
+def test_sphinx_docs_explain_current_candidate_integration_contract() -> None:
+    policy_value = json.loads(POLICY.read_text())
+    index = (ROOT / "index.rst").read_text()
+    implementation = " ".join((ROOT / "04_implementation.rst").read_text().split())
+    lifecycle = " ".join((ROOT / "06_lifecycle_management.rst").read_text().split())
+    results = " ".join((ROOT / "05_test_results.rst").read_text().split())
+
+    assert "candidate integration" in index.lower()
+    assert "uv pip sync" in index
+    assert "assurance/candidate-integration-policy.json" in implementation
+    assert "tools/verify_candidate_integration.py" in implementation
+    assert "expected non-zero exit status" in implementation
+    assert "component manifest path and digest" in implementation
+    assert "does not hash the runner source" in implementation
+    assert "does not reject additional unlisted files" in implementation
+    for command in (
+        "test",
+        "sanitizer",
+        "coverage",
+        "complexity",
+        "warnings",
+        "static-analysis",
+        "reproducible",
+    ):
+        assert f"``{command}``" in implementation
+    assert "``CC``" in implementation
+    assert "``AR``" in implementation
+    assert "does not necessarily change" in lifecycle
+    assert f'{policy_value["coverage"]["line_percent"]:.2f}%' in results
+    assert f'{policy_value["coverage"]["branch_percent"]:.2f}%' in results
+    assert "15 of 154" in results
+    assert "17 Cppcheck error/warning findings" in results
+    assert "Valgrind/Memcheck" in results
+    assert "sustained fuzzing" in results
+    assert "MISRA C" in results
+    assert "MC/DC" in results
+    assert "RFC-conformance" in results
+    assert "Issue #21 was closed as not planned" in results
+    assert "new exact-tree review issue" in results
+
+
+def test_sphinx_config_excludes_documented_local_venv() -> None:
+    conf_path = ROOT / "conf.py"
+    namespace: dict[str, object] = {"__file__": str(conf_path)}
+    exec(conf_path.read_text(), namespace)
+    patterns = namespace["exclude_patterns"]
+    assert isinstance(patterns, list)
+    assert ".venv" in patterns
+
+
 def test_shipped_gsn_does_not_claim_the_blocked_proposition() -> None:
     gsn = GSN.read_text()
     assert "QUALIFICATION AND PUBLICATION: BLOCK" in gsn
