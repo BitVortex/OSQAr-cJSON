@@ -1,223 +1,121 @@
-name: cJSON Qualification CI
+name: cJSON qualification candidate
 
 on:
   push:
-    branches: [main]
-    tags:
-      - '[0-9]*.[0-9]*.[0-9]*-[0-9]*.[0-9]*.[0-9]*'
+    branches:
+      - main
+      - qualification/**
   pull_request:
     branches: [main]
 
 permissions:
-  contents: write   # required for creating GitHub Releases on tag
+  contents: read
 
 jobs:
-  qualify:
+  qualification-candidate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out exact source and submodule
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.lock
 
-      - name: Install tool dependencies
+      - name: Install hash-locked Python tools
+        run: python -m pip install --require-hashes -r requirements.lock
+
+      - name: Install documentation renderer
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq cppcheck gcovr lcov default-jre-headless plantuml
-          pip install osqar==0.9.0
-          pip install lizard
+          sudo apt-get install -y -qq default-jre-headless plantuml
 
-      - name: Build and test cJSON (qualification pipeline)
+      - name: Verify locked Python dependencies
+        run: python -m pip check
+
+      - name: Verify documented native candidate deviations
         run: |
-          chmod +x build-and-test.sh
+          set +e
           ./build-and-test.sh all
-          echo "=== Evidence artifacts ==="
-          ls -la test_results.xml coverage_report.txt complexity_report.txt 2>/dev/null || true
-          ls -la _build/evidence/ 2>/dev/null || true
+          NATIVE_RC=$?
+          set -e
+          test "${NATIVE_RC}" -eq 1
 
-      - name: Build Sphinx documentation (first pass — produces needs.json)
+      - name: Run runner regression and fault-seed tests
+        if: always() && !cancelled()
+        run: python -m pytest -q
+
+      - name: Build warning-as-error documentation
+        if: always() && !cancelled()
         run: |
-          python3 -m sphinx -b html . _build/html 2>&1 | tail -5
-          echo "=== First Sphinx build OK ==="
-          test -f _build/html/index.html
-          test -f _build/html/needs.json
+          python -m sphinx -b html -W . _build/html
+          test -s _build/html/index.html
+          test -s _build/html/needs.json
 
-      - name: Generate GSN safety case diagram (PlantUML)
+      - name: Generate blocked qualification evidence report
+        if: always() && !cancelled()
         run: |
-          echo "=== Generating GSN diagram (PlantUML) ==="
-          osqar gsn generate _build/html/needs.json --output _static/gsn_safety_case.puml
-          echo "Generated .puml: $(wc -l < _static/gsn_safety_case.puml) lines"
-          grep -q '@startuml' _static/gsn_safety_case.puml && echo "  ✓ Valid PlantUML"
-          grep -q '@enduml' _static/gsn_safety_case.puml && echo "  ✓ Valid closing"
+          SOURCE_REVISION="$(git rev-parse HEAD:cjson-source)"
+          CONFIGURATION_SHA256="$(python -c 'import runpy; print(runpy.run_path("tools/qualification.py")["configuration_sha256"]())')"
+          set +e
+          osqar framework validate \
+            --project osqar_project.json \
+            --profile qualification \
+            --source-revision "${SOURCE_REVISION}" \
+            --configuration-sha256 "${CONFIGURATION_SHA256}" \
+            --report-json _build/evidence/framework-validation.json
+          FRAMEWORK_RC=$?
+          set -e
+          test "${FRAMEWORK_RC}" -eq 1
 
-      - name: Build Sphinx documentation (second pass — embeds GSN diagram)
+      - name: Generate blocked directed qualification traceability report
+        if: always() && !cancelled()
         run: |
-          python3 -m sphinx -b html -W . _build/html
-          echo "=== Final Sphinx build OK ==="
-          test -f _build/html/index.html
-          test -f _build/html/needs.json
-
-      - name: Upload Sphinx HTML artifact (for Pages)
-        uses: actions/upload-artifact@v4
-        with:
-          name: sphinx-html
-          path: _build/html/
-          retention-days: 7
-
-      - name: Run OSQAr doctor
-        run: |
-          osqar doctor --project . --traceability --needs-json _build/html/needs.json
-        continue-on-error: true
-
-      - name: Traceability check (custom prefixes)
-        run: |
+          SOURCE_REVISION="$(git rev-parse HEAD:cjson-source)"
+          CONFIGURATION_SHA256="$(python -c 'import runpy; print(runpy.run_path("tools/qualification.py")["configuration_sha256"]())')"
+          set +e
           osqar traceability _build/html/needs.json \
-            --test-prefix VER_ --code-prefix IMPL_ \
-            --json-report _build/html/traceability_report.json
+            --project-config osqar_project.json \
+            --profile qualification \
+            --evidence-project osqar_project.json \
+            --source-revision "${SOURCE_REVISION}" \
+            --configuration-sha256 "${CONFIGURATION_SHA256}" \
+            --test-prefix VER_ \
+            --code-prefix IMPL_ \
+            --json-report _build/evidence/traceability-qualification-v1.json
+          TRACEABILITY_RC=$?
+          set -e
+          test "${TRACEABILITY_RC}" -eq 1
 
-      - name: Assemble shipment
+      - name: Accept candidate integration policy (qualification remains blocked)
+        if: always() && !cancelled()
         run: |
-          set -euo pipefail
-          SHIP_ROOT="_shipment"
-          rm -rf "${SHIP_ROOT}"
-          mkdir -p "${SHIP_ROOT}/docs" "${SHIP_ROOT}/implementation" \
-                   "${SHIP_ROOT}/tests" "${SHIP_ROOT}/reports" \
-                   "${SHIP_ROOT}/verification"
+          python tools/verify_candidate_integration.py \
+            --root . \
+            --policy assurance/candidate-integration-policy.json \
+            --framework-report _build/evidence/framework-validation.json \
+            --traceability-report _build/evidence/traceability-qualification-v1.json
 
-          # Documentation (Sphinx HTML build)
-          cp -a _build/html/. "${SHIP_ROOT}/docs/"
-
-          # Source code (qualification baseline)
-          cp cjson-source/cJSON.c cjson-source/cJSON.h \
-             cjson-source/cJSON_Utils.c cjson-source/cJSON_Utils.h \
-             "${SHIP_ROOT}/implementation/" 2>/dev/null || true
-          cp cjson-source/CMakeLists.txt cjson-source/Makefile \
-             "${SHIP_ROOT}/implementation/" 2>/dev/null || true
-
-          # Build descriptor
-          cp osqar_project.json build-and-test.sh "${SHIP_ROOT}/implementation/" 2>/dev/null || true
-
-          # Test suite
-          if [ -d cjson-source/tests ]; then
-            cp -a cjson-source/tests/. "${SHIP_ROOT}/tests/" 2>/dev/null || true
-          fi
-
-          # Reports (generated by build-and-test.sh)
-          for f in test_results.xml coverage_report.txt complexity_report.txt; do
-            if [ -f "$f" ]; then
-              cp "$f" "${SHIP_ROOT}/reports/"
-            fi
-          done
-
-          # Verification evidence (sanitizer logs, cppcheck, warn audit)
-          if [ -d _build/evidence ]; then
-            cp -a _build/evidence/. "${SHIP_ROOT}/verification/" 2>/dev/null || true
-          fi
-
-          echo "=== Shipment assembled ==="
-          find "${SHIP_ROOT}" -type f | wc -l
-          echo "files"
-
-      - name: Generate checksums
-        run: |
-          osqar checksum generate \
-            --root _shipment \
-            --output _shipment/SHA256SUMS
-          osqar checksum verify \
-            --root _shipment \
-            --manifest _shipment/SHA256SUMS
-
-      - name: Package shipment archive
-        run: |
-          rm -f osqar_cjson_shipment.zip osqar_cjson_shipment.zip.sha256
-          osqar shipment package --shipment _shipment --output osqar_cjson_shipment.zip
-          sha256sum osqar_cjson_shipment.zip > osqar_cjson_shipment.zip.sha256
-          echo "Shipment package: $(du -h osqar_cjson_shipment.zip | cut -f1)"
-
-      - name: Upload shipment artifact
+      - name: Upload candidate evidence for review
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cjson-qualification-shipment
+          name: qualification-candidate-${{ github.sha }}
           path: |
-            osqar_cjson_shipment.zip
-            osqar_cjson_shipment.zip.sha256
-          retention-days: 90
+            _build/evidence/
+            _build/html/needs.json
+          if-no-files-found: warn
+          retention-days: 30
 
-      - name: Create GitHub Release (on tag)
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
-        with:
-          name: "cJSON Qualification ${{ github.ref_name }}"
-          body: |
-            ## cJSON ${{ github.ref_name }} — ISO 26262 ASIL D SEooC Qualification
-
-            Qualified using [OSQAr](https://github.com/BitVortex/OSQAr) v0.9.0.
-
-            **Shipment contents:**
-            - Sphinx HTML documentation with full traceability (requirements ↔ architecture ↔ verification)
-            - `needs.json` machine-readable traceability export
-            - `traceability_report.json` verification report (zero violations)
-            - `traceability_matrix.xlsx` spreadsheet-ready traceability matrix
-            - `gsn_safety_case.puml` GSN diagram (PlantUML, embedded in docs)
-            - `SHA256SUMS` integrity manifest with GPG detached signature
-            - cJSON source files (qualification baseline)
-            - Test results (JUnit XML), coverage report, complexity analysis
-            - Sanitizer logs (ASan+UBSan), compiler warning audit
-
-            **v0.9.0 features applied:**
-            | Feature | Status |
-            |---|---|
-            | GSN safety case | 4 safety goals, PlantUML diagram |
-            | Figure click-to-zoom | Inline lightbox on all diagrams (framework asset) |
-            | Baseline snapshot | v1.0 baseline (55 needs) |
-            | Impact analysis | Full transitive closure on all REQ_ seeds |
-            | XLSX traceability matrix | 12 requirements × 8 columns |
-            | GPG manifest signing | RSA-2048 detached signature |
-            | Incremental shipment | Cache-enabled for CI efficiency |
-
-            **Verification status:**
-            | Activity | Status |
-            |---|---|
-            | Test suite | **162 Unity tests**, 0 failures |
-            | ASan+UBSan | CLEAN |
-            | Compiler warnings | ZERO (`-Werror`) |
-            | Statement coverage | **88.1%** (1788/2029 lines) |
-            | Function coverage | **98.7%** (149/151 functions) |
-            | Static analysis | cppcheck XML in shipment |
-            | Traceability | ZERO violations |
-
-            Coverage measured via lcov/gcov with `--coverage` instrumentation across 18 core + 3 utils test executables. Complexity analyzed with lizard. Raw reports in `verification/` and `reports/` in the shipment ZIP.
-
-            See [OSQAr-cJSON README](https://github.com/BitVortex/OSQAr-cJSON#readme) and [documentation](https://bitvortex.github.io/OSQAr-cJSON/) for full qualification details.
-          files: |
-            osqar_cjson_shipment.zip
-            osqar_cjson_shipment.zip.sha256
-          generate_release_notes: false
-
-  pages:
-    needs: qualify
-    if: startsWith(github.ref, 'refs/tags/')
+  publication-disabled:
+    if: false
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
     steps:
-      - name: Download Sphinx HTML artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: sphinx-html
-          path: _site
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - run: |
+          echo "Publication remains disabled until all qualification gates pass,"
+          echo "the release manifest verifies, and the exact tree receives independent review."

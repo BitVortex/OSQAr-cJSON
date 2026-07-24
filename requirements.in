@@ -1,0 +1,8 @@
+# Qualification toolchain for OSQAr-cJSON.
+# OSQAr 0.10.2 is the required behavior/schema profile.
+osqar==0.10.2
+pytest==8.4.2
+gcovr==7.2
+lizard==1.17.10
+# The PyPI distribution version 1.5.1 provides cppcheck binary 2.17.1.
+cppcheck==1.5.1

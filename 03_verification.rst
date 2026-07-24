@@ -1,132 +1,166 @@
-Verification — cJSON Qualification
-====================================
+Qualification verification plan and evidence bindings
+=====================================================
 
-.. need:: Execute the full cJSON test suite (unit tests for parser, printer, utilities, RFC conformance) and confirm all tests pass with zero failures.
-   :id: VER_CJSON_TEST_SUITE
+All activities are required for the bounded qualification attempt. A runner
+step is successful only when the subprocess exit status, parsed content,
+expected inventory, policy threshold, provenance, and output schema all pass.
+A generated file by itself is not evidence of success.
+
+Verification activities
+-----------------------
+
+.. ver:: Compile and execute the exact 21-executable upstream Unity inventory;
+        reconcile 162 verbose cases, process exits, summaries, and JUnit cases.
+   :id: VER_UNIT
    :status: active
-   :tags: verification;test;ASIL_D
-   :links: REQ_CJSON_PARSE_VALID;REQ_CJSON_PRINT_VALID;REQ_CJSON_UTILS_RFC
+   :produces: RESULT_UNIT
 
-.. need:: Run Valgrind/Memcheck on the test suite to verify absence of memory leaks, use-after-free, uninitialized reads, and invalid memory accesses.
-   :id: VER_CJSON_VALGRIND
+.. ver:: Recompile component objects and every harness with ASan and UBSan,
+        execute the exact Unity inventory, and reject any sanitizer diagnostic,
+        non-zero exit, signal, or inventory mismatch.
+   :id: VER_SANITIZER
    :status: active
-   :tags: verification;memory;valgrind;ASIL_D
-   :links: REQ_CJSON_MEMORY_SAFE;REQ_CJSON_NO_UB;REQ_CJSON_STRING_SAFE
+   :produces: RESULT_SANITIZER
 
-.. need:: Run AddressSanitizer (ASan) and UndefinedBehaviorSanitizer (UBSan) instrumented test builds to detect runtime memory errors and undefined behavior.
-   :id: VER_CJSON_SANITIZERS
+.. ver:: Recompile component objects and harnesses with coverage
+        instrumentation, execute the exact inventory, create gcovr JSON/text,
+        validate the source scope, and enforce the recorded line/branch policy.
+   :id: VER_COVERAGE
    :status: active
-   :tags: verification;safety;sanitizers;ASIL_D
-   :links: REQ_CJSON_NO_UB;REQ_CJSON_MEMORY_SAFE
+   :produces: RESULT_COVERAGE
 
-.. need:: Verify bounded stack usage. Confirm that CJSON_NESTING_LIMIT (default 1000) prevents unbounded recursion and that the parser returns an error for inputs exceeding the nesting limit.
-   :id: VER_CJSON_STACK
+.. ver:: Execute cppcheck against the recorded source scope, parse non-empty
+        XML, reject error/warning findings, and inventory every remaining
+        severity in a machine-readable findings record.
+   :id: VER_STATIC
    :status: active
-   :tags: verification;stack;ASIL_D
-   :links: REQ_CJSON_STACK_BOUNDED
+   :produces: RESULT_STATIC
 
-.. need:: Audit integer operations in parse_number, print_number, and buffer-size computation for signed overflow and wraparound vulnerabilities. Verify with UBSan integer checks.
-   :id: VER_CJSON_ARITH
+.. ver:: Compile each recorded source under C99 with the warning policy and
+        ``-Werror``; any diagnostic or command failure blocks the activity.
+   :id: VER_WARNINGS
    :status: active
-   :tags: verification;integer;ASIL_D
-   :links: REQ_CJSON_ARITH_SAFE
+   :produces: RESULT_WARNINGS
 
-.. need:: Fuzz-test the cJSON parser with AFL++ or libFuzzer for a minimum of 24 CPU-hours. All crashes, hangs, and assertion failures shall be triaged and resolved.
-   :id: VER_CJSON_FUZZING
+.. ver:: Execute lizard live, parse each function metric, enforce the recorded
+        CCN/function-length policy, and inventory every exceedance.
+   :id: VER_COMPLEXITY
    :status: active
-   :tags: verification;fuzzing;ASIL_D
-   :links: REQ_CJSON_PARSE_VALID;REQ_CJSON_NO_UB
+   :produces: RESULT_COMPLEXITY
 
-.. need:: Run static analysis (cppcheck, clang-tidy) on cJSON source with MISRA-inspired checks. All warnings shall be reviewed and either resolved or justified with a deviation record.
-   :id: VER_CJSON_STATIC
+.. ver:: Perform two clean builds from the same recorded inputs and compare
+        SHA-256 identities for each component object and static library.
+   :id: VER_REPRODUCIBLE
    :status: active
-   :tags: verification;static-analysis;ASIL_D
-   :links: REQ_CJSON_CODE_QUALITY;REQ_CJSON_ARITH_SAFE;REQ_CJSON_STRING_SAFE
+   :produces: RESULT_REPRODUCIBLE
 
-.. need:: Verify NULL-pointer safety by constructing test cases that pass NULL to every public API function and confirming deterministic error returns.
-   :id: VER_CJSON_API
-   :status: active
-   :tags: verification;api;ASIL_D
-   :links: REQ_CJSON_NULL_PTR_SAFE
+Candidate result and evidence nodes
+-----------------------------------
 
-.. need:: Measure statement and branch coverage of the test suite on the cJSON source. Target: ≥ 90% statement coverage, ≥ 80% branch coverage. Document uncovered branches with safety justifications.
-   :id: VER_CJSON_COVERAGE
-   :status: active
-   :tags: verification;coverage;ASIL_D
-   :links: REQ_CJSON_CODE_QUALITY
+The nodes below intentionally remain ``blocked``/``candidate`` in source. The
+evidence generator must create fresh artifacts, and OSQAr v0.10.2 must establish
+framework acceptance for the exact source/configuration before a controlled
+release process may promote them. Authored prose cannot self-approve evidence.
 
-.. need:: Verify JSON Patch and JSON Pointer conformance against RFC 6902 and RFC 6901 test vectors, including edge cases and error paths.
-   :id: VER_CJSON_UTILS
-   :status: active
-   :tags: verification;rfc;utils;ASIL_D
-   :links: REQ_CJSON_UTILS_RFC
+.. result:: Unity inventory and JUnit reconciliation result.
+   :id: RESULT_UNIT
+   :status: blocked
+   :evidence_state: candidate
+   :acceptance_activity: test-suite
+   :evidenced_by: EVID_UNIT
 
-.. need:: Measure cyclomatic complexity of all cJSON functions. Functions exceeding McCabe 15 shall be reviewed and justifications documented.
-   :id: VER_CJSON_COMPLEXITY
-   :status: active
-   :tags: verification;complexity;ASIL_D
-   :links: REQ_CJSON_CODE_QUALITY
+.. evidence:: Generated ``_build/evidence/test/result.junit.xml`` and paired
+             provenance JSON.
+   :id: EVID_UNIT
+   :status: blocked
+   :evidence_state: candidate
+   :acceptance_activity: test-suite
 
-.. need:: Verify cJSON_PrintBuffered and cJSON_PrintPreallocated do not write beyond buffer boundaries by providing undersized buffers and confirming error returns.
-   :id: VER_CJSON_STRING
-   :status: active
-   :tags: verification;string;buffer;ASIL_D
-   :links: REQ_CJSON_STRING_SAFE
+.. result:: Component-instrumented ASan/UBSan execution result.
+   :id: RESULT_SANITIZER
+   :status: blocked
+   :evidence_state: candidate
+   :acceptance_activity: sanitizer
+   :evidenced_by: EVID_SANITIZER
 
-.. need:: Compile cJSON with the qualified toolchain and confirm reproducible build output (identical binary across rebuilds).
-   :id: VER_CJSON_REPRODUCIBLE
-   :status: active
-   :tags: verification;build;ASIL_D
-   :links: REQ_CJSON_REPRODUCIBLE
+.. evidence:: Generated sanitizer execution report and provenance JSON.
+   :id: EVID_SANITIZER
+   :status: blocked
+   :evidence_state: candidate
+   :acceptance_activity: sanitizer
 
-Standards Traceability (ISO 26262-6:2018)
------------------------------------------
+.. result:: Structural coverage policy result.
+   :id: RESULT_COVERAGE
+   :status: blocked
+   :evidence_state: candidate
+   :acceptance_activity: coverage
+   :evidenced_by: EVID_COVERAGE
 
-Each verification activity targets specific ISO 26262-6:2018 requirements
-for ASIL D software development:
+.. evidence:: Generated gcovr JSON/text reports and provenance JSON.
+   :id: EVID_COVERAGE
+   :status: blocked
+   :evidence_state: candidate
+   :acceptance_activity: coverage
 
-.. list-table::
-   :header-rows: 1
+.. result:: Static-analysis finding-policy result.
+   :id: RESULT_STATIC
+   :status: blocked
+   :evidence_state: candidate
+   :acceptance_activity: static-analysis
+   :evidenced_by: EVID_STATIC
 
-   * - Verification Activity
-     - ISO 26262-6:2018 Reference
-     - ASIL D Requirement
-   * - VER_CJSON_TEST_SUITE
-     - §9.4.4 (Test case derivation)
-     - Requirements-based tests derived from software safety requirements
-   * - VER_CJSON_SANITIZERS
-     - §9.4.5 (Dynamic analysis)
-     - Memory and undefined behavior detection via runtime instrumentation
-   * - VER_CJSON_STATIC
-     - §9.4.5 (Static code analysis)
-     - Automated static analysis of source code, MISRA checks
-   * - VER_CJSON_COVERAGE
-     - §9.4.7 Table 10 (Structural coverage at unit level)
-     - Statement coverage, branch coverage; MC/DC deferred (documented gap)
-   * - VER_CJSON_COMPLEXITY
-     - §7.4.5 Table 3 (Software architectural design principles)
-     - Restricted size and complexity of software components
-   * - VER_CJSON_STACK
-     - §8.4.5 Table 8 (Software unit design — no recursion)
-     - Bounded recursion; depth limit enforced
-   * - VER_CJSON_ARITH
-     - §8.4.5 Table 8 (Defensive implementation)
-     - Overflow protection in arithmetic operations
-   * - VER_CJSON_STRING
-     - §8.4.5 Table 8 (Defensive implementation)
-     - Buffer boundary checks on all string operations
-   * - VER_CJSON_API
-     - §6.4.1 Table 1 (Safety requirements specification)
-     - NULL-pointer safety; deterministic error returns
-   * - VER_CJSON_VALGRIND
-     - §9.4.5 (Dynamic analysis — supplementary)
-     - Additional memory safety validation beyond ASan/UBSan
-   * - VER_CJSON_FUZZING
-     - §9.4.5 Table 9 (Methods for verification of software units)
-     - Negative testing / fault injection via fuzzing
-   * - VER_CJSON_REPRODUCIBLE
-     - §11.4.8 (Configuration management — reproduction)
-     - Build reproducibility verification per ISO 26262-8:2018 §11.4.8
-   * - VER_CJSON_UTILS
-     - §9.4.4 (Test case derivation)
-     - RFC conformance testing for utility functions
+.. evidence:: Generated cppcheck XML, controlled finding inventory, and
+             provenance JSON.
+   :id: EVID_STATIC
+   :status: blocked
+   :evidence_state: candidate
+   :acceptance_activity: static-analysis
+
+.. result:: Compiler warning-policy result.
+   :id: RESULT_WARNINGS
+   :status: blocked
+   :evidence_state: candidate
+   :acceptance_activity: warnings
+   :evidenced_by: EVID_WARNINGS
+
+.. evidence:: Generated compiler invocation/diagnostic report and provenance.
+   :id: EVID_WARNINGS
+   :status: blocked
+   :evidence_state: candidate
+   :acceptance_activity: warnings
+
+.. result:: Complexity threshold result.
+   :id: RESULT_COMPLEXITY
+   :status: blocked
+   :evidence_state: candidate
+   :acceptance_activity: complexity
+   :evidenced_by: EVID_COMPLEXITY
+
+.. evidence:: Generated lizard report, threshold finding inventory, and
+             provenance JSON.
+   :id: EVID_COMPLEXITY
+   :status: blocked
+   :evidence_state: candidate
+   :acceptance_activity: complexity
+
+.. result:: Clean-build reproducibility result.
+   :id: RESULT_REPRODUCIBLE
+   :status: blocked
+   :evidence_state: candidate
+   :acceptance_activity: reproducible-build
+   :evidenced_by: EVID_REPRODUCIBLE
+
+.. evidence:: Generated two-build SHA-256 comparison and provenance JSON.
+   :id: EVID_REPRODUCIBLE
+   :status: blocked
+   :evidence_state: candidate
+   :acceptance_activity: reproducible-build
+
+Verification completeness rule
+------------------------------
+
+A result may be promoted only by a controlled generation step that binds the
+result to the current source revision and configuration SHA-256 and only after
+all required activity records pass OSQAr v0.10.2 qualification-profile
+validation. Independent verification of intended-use validity remains a
+separate Clause 12 release gate.

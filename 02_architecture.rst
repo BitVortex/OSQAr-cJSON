@@ -1,102 +1,87 @@
-Architecture — cJSON Qualification
-====================================
+Architecture and implementation allocation
+==========================================
 
-.. need:: The cJSON parser implements a recursive-descent algorithm operating on a UTF-8 byte stream. Control flow passes through tokenizer, value parser, and object/array constructors.
-   :id: ARCH_PARSER_FLOW
+The architecture describes the boundary used by this qualification attempt. It
+is not a replacement for an item-level software architecture.
+
+Architecture elements
+---------------------
+
+.. arch:: Parser control flow consumes a bounded byte sequence through the
+          internal parse buffer and constructs a cJSON tree. The nesting limit,
+          buffer length, allocation results, and parse-end contract bound this
+          path.
+   :id: ARCH_PARSER
    :status: active
-   :tags: architecture;parsing
-   :links: REQ_CJSON_PARSE_VALID;REQ_CJSON_NO_UB;REQ_CJSON_STACK_BOUNDED
+   :realized_by: IMPL_PARSE_API, IMPL_CORE_SOURCE
 
-.. need:: The cJSON printer traverses an in-memory cJSON object graph, emitting formatted or unformatted JSON text through a bounded output buffer.
-   :id: ARCH_PRINTER_FLOW
+.. arch:: Printer control flow traverses an in-scope cJSON tree and writes to a
+          dynamically grown or caller-provided buffer according to the selected
+          printing API.
+   :id: ARCH_PRINTER
    :status: active
-   :tags: architecture;printing
-   :links: REQ_CJSON_PRINT_VALID;REQ_CJSON_ARITH_SAFE
+   :realized_by: IMPL_PRINT_API, IMPL_CORE_SOURCE
 
-.. need:: Memory management uses the standard C malloc/free allocator by default, with an optional hook mechanism (cJSON_InitHooks) that allows integration with a safety-qualified memory allocator.
-   :id: ARCH_MEMORY_MODEL
+.. arch:: Memory ownership is represented by tree links, value buffers, the
+          reference flags, and the configured allocation hooks. Ownership is
+          transferred only through documented API operations.
+   :id: ARCH_MEMORY
    :status: active
-   :tags: architecture;memory
-   :links: REQ_CJSON_MEMORY_SAFE
+   :realized_by: IMPL_MEMORY_API, IMPL_CORE_SOURCE
 
-.. need:: The cJSON data model is a tagged union (cJSON struct) supporting six value types: null, boolean, number, string, array, object. Arrays are linked lists of cJSON items; objects are linked lists of cJSON items with associated string keys.
-   :id: ARCH_DATA_MODEL
+.. arch:: Failure and diagnostics are communicated through NULL/false return
+          values and the parser error pointer. The latter is shared state and is
+          therefore part of the concurrency restriction.
+   :id: ARCH_ERROR_CONTRACT
    :status: active
-   :tags: architecture;datamodel
+   :realized_by: IMPL_DIAGNOSTIC_API, IMPL_CORE_SOURCE
 
-.. need:: The cJSON module boundary is defined by cJSON.h. All public API functions are marked CJSON_PUBLIC. Internal helpers (parse_, print_, ensure_, etc.) are static and not part of the external interface. The cJSON_Utils extension provides JSON Patch and JSON Pointer operations on top of the core API.
-   :id: ARCH_MODULE_BOUNDARY
+.. arch:: The qualification build boundary fixes the source object, language
+          mode, preprocessor configuration, compiler/linker options, test input
+          inventory, tool versions, and evidence configuration hash.
+   :id: ARCH_BUILD_BOUNDARY
    :status: active
-   :tags: architecture;interface
-   :links: REQ_CJSON_NULL_PTR_SAFE
+   :realized_by: IMPL_CORE_SOURCE
 
-Component Architecture (PlantUML)
-------------------------------------
-
-.. container:: gsn-figure
-
-   .. plantuml:: _static/cjson_component_architecture.puml
-      :alt: cJSON v1.7.19 Component Architecture Diagram
-      :align: center
-
-.. need:: Component Decomposition — cJSON Core and Utils
-   :id: ARCH_COMPONENT_DECOMPOSITION
-   :status: active
-   :tags: architecture;decomposition
-   :links: REQ_CJSON_PARSE_VALID;ARCH_PARSER_FLOW
-
-   The cJSON core (``cJSON.c``) contains four subsystems:
-
-   - **Parser**: recursive-descent JSON tokenizer and value constructor
-   - **Printer**: tree-walk JSON serializer to buffer
-   - **Memory Management**: malloc/free with optional hook replacement
-   - **Object Model**: tagged-union cJSON struct with linked-list children
-     for arrays/objects
-
-   The cJSON Utils (``cJSON_Utils.c``) builds on the core with JSON Patch
-   (RFC 6902), JSON Pointer (RFC 6901), and Sort/Merge utilities.
-
-   All components interface with the C standard library for string and
-   memory operations.
-
-Parser Flow (PlantUML)
+Implementation elements
 -----------------------
 
-.. container:: gsn-figure
-
-   .. plantuml:: _static/cjson_parser_flow.puml
-      :alt: cJSON Parser Flow Sequence Diagram
-      :align: center
-
-Data Model (PlantUML)
-----------------------
-
-.. container:: gsn-figure
-
-   .. plantuml:: _static/cjson_data_model.puml
-      :alt: cJSON Data Model Class Diagram
-      :align: center
-
-Safety Architecture — Freedom from Interference
-------------------------------------------------
-
-.. need:: Freedom from Interference Measures
-   :id: ARCH_FFI_MEASURES
+.. impl:: Parsing API class from ``cJSON.h``: ``cJSON_Parse*`` entry points and
+         parse-result access through the returned tree.
+   :id: IMPL_PARSE_API
+   :kind: api
    :status: active
-   :tags: architecture;ffi;safety
-   :links: REQ_CJSON_STACK_BOUNDED;REQ_CJSON_MEMORY_SAFE
 
-   FFI measures in cJSON:
+.. impl:: Printing API class from ``cJSON.h``: allocated, preallocated,
+         formatted, and unformatted printing entry points.
+   :id: IMPL_PRINT_API
+   :kind: api
+   :status: active
 
-   - No global state — all state is in caller-owned cJSON* objects
-   - Memory allocation hooks enable replacement with a qualified allocator
-   - Bounded stack depth via CJSON_NESTING_LIMIT (default 1000)
-   - No thread synchronization performed inside the library
+.. impl:: Ownership API class from ``cJSON.h``: hooks, create/add/detach/delete,
+         duplicate, compare, and reference operations.
+   :id: IMPL_MEMORY_API
+   :kind: api
+   :status: active
 
-   Integrator responsibilities:
+.. impl:: Diagnostic API class from ``cJSON.h``: error-pointer and type/query
+         operations. The global error pointer is not a thread-local interface.
+   :id: IMPL_DIAGNOSTIC_API
+   :kind: api
+   :status: active
 
-   - Provide a qualified allocator via cJSON_InitHooks
-   - Validate all inputs before API calls
-   - Check all return values for error indicators
-   - Handle error paths at the integration boundary
-   - Ensure inputs respect nesting limits
+.. impl:: The in-scope implementation is the unmodified upstream
+         ``cJSON.c``/``cJSON.h`` pair at the identified git object. The
+         qualification configuration does not define ``ENABLE_LOCALES``.
+   :id: IMPL_CORE_SOURCE
+   :kind: code
+   :status: active
+
+Control and data boundaries
+---------------------------
+
+The parser and printer have no operating-system or network interface. External
+interactions are limited to input buffers, returned trees/buffers, C library
+numeric/string operations, and configured allocation hooks. Resource bounds
+and execution timing are platform- and input-dependent and remain integrator
+obligations.

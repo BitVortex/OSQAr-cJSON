@@ -1,147 +1,58 @@
-Goal Structuring Notation — cJSON Safety Case
-================================================
+Qualification argument and decision
+===================================
 
-.. _gsn_overview:
+Top-level proposition
+---------------------
 
-.. container:: gsn-figure
+The proposition under evaluation is:
 
-   .. plantuml:: _static/gsn_safety_case.puml
-      :caption: GSN Safety Case — cJSON v1.7.19 SEooC (ISO 26262-10:2018)
-      :align: center
+   The exact cJSON ``v1.7.19`` core source identified in
+   :doc:`01_requirements` is suitable for reuse under the bounded API,
+   configuration, and assumptions of use, with verification rigor targeting
+   ASIL D.
 
-The following safety case is structured using the Goal Structuring Notation (GSN)
-and targets ISO 26262-10:2018 SEooC qualification of cJSON v1.7.19 for ASIL D
-integration. Goals are linked to their supporting strategies, sub-goals, and
-solutions (evidence). Context elements capture the Assumptions of Use from
-`Lifecycle Management <06_lifecycle_management>`_.
+**Current decision: BLOCK — proposition not established.**
 
-Top-Level Goal
---------------
+Argument structure
+------------------
 
-.. sc:: cJSON v1.7.19 is sufficiently safe to be integrated as a Safety Element out of Context (SEooC) into an ASIL D automotive system, subject to the Assumptions of Use defined in LM_AOU_CONTEXT through LM_AOU_TOOLCHAIN.
-   :id: SC_CJSON_SAFE
-   :status: active
-   :tags: safety-case;top-level
-   :links: LM_AOU_CONTEXT;LM_AOU_INPUTS;LM_AOU_THREADING;LM_AOU_ERROR;LM_AOU_TOOLCHAIN
+A future positive decision would require all of the following independent
+branches to be accepted for the same immutable source/configuration/release
+identity:
 
-Parsing Safety
---------------
+1. the software-component specification and intended-use boundary are complete;
+2. each component requirement is allocated and covered by adequate normal and
+   failure-condition verification;
+3. structural coverage and uncovered-code dispositions demonstrate test
+   completeness for the target rigor;
+4. no known anomaly or analysis finding can violate an allocated safety
+   requirement under the intended use;
+5. the component development-process evidence required by ISO 26262-8:2018,
+   12.4.1 is available and accepted;
+6. integration instructions and every AoU decision are accepted for the target
+   item/environment;
+7. tool-confidence and evidence-integrity controls are accepted;
+8. ISO 26262-8:2018, 12.4.3 verification confirms both the qualification results
+   and their validity for intended use; and
+9. the exact release inventory and manifest pass independent exact-tree review.
 
-.. sc:: cJSON correctly parses all valid JSON (RFC 8259) and deterministically rejects all malformed inputs.
-   :id: SC_PARSE_SAFETY
-   :status: active
-   :tags: safety-case;parsing
-   :links: REQ_CJSON_PARSE_VALID;VER_CJSON_TEST_SUITE;VER_CJSON_FUZZING;SC_CJSON_SAFE
+Why the current decision is BLOCK
+---------------------------------
 
-.. sc:: Solution: Parsing Evidence
-   :id: SC_PARSE_EVIDENCE
-   :status: active
-   :tags: safety-case;evidence;parsing
-   :links: SC_PARSE_SAFETY
+The technical activities were regenerated for this revision, but complexity
+and static-analysis findings remain open and all candidate result/evidence
+nodes remain unapproved. More importantly, the
+controlled gaps for development-process evidence, intended-use validity,
+coverage adequacy, anomaly disposition, tool confidence, and independent
+qualification verification are open. Automated test success cannot close these
+gaps.
 
-   162 Unity tests covering parsing edge cases, including malformed JSON,
-   deep nesting, and boundary conditions. The test suite passes under
-   standard and ASan+UBSan instrumented builds.
+Interpretation rule
+-------------------
 
-   Evidence: :need:`VER_CJSON_TEST_SUITE`.
-   Fuzzing campaign planned: :need:`VER_CJSON_FUZZING`.
-
-Memory Safety
--------------
-
-.. sc:: cJSON is free from memory errors (heap corruption, use-after-free, double-free, buffer overrun, uninitialized reads).
-   :id: SC_MEMORY_SAFETY
-   :status: active
-   :tags: safety-case;memory
-   :links: REQ_CJSON_MEMORY_SAFE;VER_CJSON_SANITIZERS;VER_CJSON_VALGRIND;SC_CJSON_SAFE
-
-.. sc:: Solution: Memory Safety Evidence
-   :id: SC_MEMORY_EVIDENCE
-   :status: active
-   :tags: safety-case;evidence;memory
-   :links: SC_MEMORY_SAFETY
-
-   ASan+UBSan instrumentation on full test suite returns CLEAN — no
-   heap out-of-bounds, use-after-free, or stack buffer overflow. ASan's
-   LeakSanitizer detects memory leaks. A Valgrind/Memcheck gap is
-   documented with ASan mitigation (see
-   `Gap Documentation <_static/gaps>`_).
-
-   Evidence: :need:`VER_CJSON_SANITIZERS`, :need:`VER_CJSON_VALGRIND`.
-
-Undefined Behavior Freedom
---------------------------
-
-.. sc:: cJSON does not invoke undefined behavior for any input, including integer overflow, NULL dereference, and malformed data.
-   :id: SC_NO_UB
-   :status: active
-   :tags: safety-case;ub
-   :links: REQ_CJSON_NO_UB;VER_CJSON_SANITIZERS;VER_CJSON_ARITH;VER_CJSON_API;SC_CJSON_SAFE
-
-.. sc:: Solution: UB Freedom Evidence
-   :id: SC_UB_EVIDENCE
-   :status: active
-   :tags: safety-case;evidence;ub
-   :links: SC_NO_UB
-
-   UBSan integer+pointer checks return CLEAN on full test suite.
-   Arithmetic audit (:need:`VER_CJSON_ARITH`) confirms no signed overflow
-   in parse_number/print_number. NULL-pointer safety verified by dedicated
-   test cases (:need:`VER_CJSON_API`). Compiler warning audit with
-   ``-Werror -Wconversion`` — zero warnings.
-
-   Evidence: :need:`VER_CJSON_SANITIZERS`, :need:`VER_CJSON_ARITH`,
-   :need:`VER_CJSON_API`, :need:`IMPL_BUILD`.
-
-Verification Completeness
--------------------------
-
-.. sc:: All safety requirements are verified with adequate coverage and documented evidence suitable for ISO 26262-8 audit.
-   :id: SC_VERIFICATION_COMPLETE
-   :status: active
-   :tags: safety-case;verification
-   :links: REQ_CJSON_TRACEABILITY;VER_CJSON_COVERAGE;VER_CJSON_COMPLEXITY;SC_CJSON_SAFE
-
-.. sc:: Solution: Verification Completeness Evidence
-   :id: SC_VERIFICATION_EVIDENCE
-   :status: active
-   :tags: safety-case;evidence;coverage
-   :links: SC_VERIFICATION_COMPLETE
-
-   Statement coverage 88.1% (1,788/2,029 lines), function coverage 98.7%
-   (149/151). All uncovered branches are in error-recovery paths (malloc
-   failure, depth limit) justified via :need:`VER_CJSON_COVERAGE`.
-   Static analysis (cppcheck ``--all --inconclusive``) produces reviewed
-   report. Complexity analysis: one function (parse_string, CC=18) exceeds
-   McCabe 15 with documented justification.
-
-   Evidence: :need:`VER_CJSON_COVERAGE`, :need:`VER_CJSON_COMPLEXITY`,
-   :need:`VER_CJSON_STATIC`.
-
-Context
--------
-
-.. sc:: SEooC Assumptions of Use
-   :id: SC_AOU_CONTEXT
-   :status: active
-   :tags: safety-case;context;aou
-   :links: SC_CJSON_SAFE
-
-   Per ISO 26262-10:2018 §6.4.3, the following Assumptions of Use apply
-   to the cJSON SEooC qualification:
-
-   1. cJSON is integrated as a stateless library with caller-owned state
-      and a qualified memory allocator provided by the integrator via
-      cJSON_InitHooks.
-   2. JSON inputs do not exceed CJSON_NESTING_LIMIT (1000) depth; max
-      string length is bounded by available memory; inputs originate
-      from a trusted or integrity-checked source.
-   3. Single-threaded use or external synchronization by integrator.
-   4. All cJSON return values are checked by integrator; NULL/cJSON_False
-      indicate errors.
-   5. Qualification build is reproduced with audited toolchain and
-      compiler flags.
-
-   See: :need:`LM_AOU_CONTEXT`, :need:`LM_AOU_INPUTS`,
-   :need:`LM_AOU_THREADING`, :need:`LM_AOU_ERROR`,
-   :need:`LM_AOU_TOOLCHAIN`.
+OSQAr framework or typed-traceability ``PASS`` means only that the declared
+machine-checkable profile rules passed for the supplied project. It does not
+mean that this proposition is accepted, that ISO 26262 compliance has been
+assessed, or that cJSON is qualified for an automotive use. Conversely, any
+framework, traceability, evidence, manifest, or independent-review failure is a
+release BLOCK.
