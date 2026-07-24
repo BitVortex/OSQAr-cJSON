@@ -14,6 +14,15 @@ KNOWN_FAILURE_MESSAGES = {
     "complexity": "complexity limits exceeded by 15 functions",
     "static-analysis": "cppcheck reported 17 error/warning findings",
 }
+EXPECTED_ACTIVITY_RESULTS = {
+    "test": "passed",
+    "sanitizer": "passed",
+    "coverage": "passed",
+    "complexity": "failed",
+    "warnings": "passed",
+    "static-analysis": "failed",
+    "reproducible": "passed",
+}
 
 
 def load_object(path: Path, label: str) -> dict[str, Any]:
@@ -82,11 +91,22 @@ def verify(
                 )
 
     expected_results = policy.get("expected_activity_results")
-    if not isinstance(expected_results, dict) or not expected_results:
-        errors.append("expected activity result map is missing")
+    if expected_results != EXPECTED_ACTIVITY_RESULTS:
+        errors.append("expected activity result map differs from the bounded candidate")
     else:
-        for activity, expected in sorted(expected_results.items()):
-            result_path = root / "_build" / "evidence" / activity / "result.json"
+        evidence_root = root / "_build" / "evidence"
+        try:
+            actual_activities = {
+                entry.name for entry in evidence_root.iterdir() if entry.is_dir()
+            }
+        except OSError as exc:
+            errors.append(f"cannot inventory native activities: {exc}")
+            actual_activities = set()
+        if actual_activities != set(EXPECTED_ACTIVITY_RESULTS):
+            errors.append("native activity inventory differs from the bounded candidate")
+
+        for activity, expected in sorted(EXPECTED_ACTIVITY_RESULTS.items()):
+            result_path = evidence_root / activity / "result.json"
             try:
                 result = load_object(result_path, f"{activity} result")
             except ValueError as exc:
@@ -97,6 +117,56 @@ def verify(
             expected_message = KNOWN_FAILURE_MESSAGES.get(activity)
             if expected_message and result.get("message") != expected_message:
                 errors.append(f"{activity} failure inventory changed")
+
+        try:
+            coverage_metrics = load_object(
+                evidence_root / "coverage" / "metrics.json", "native coverage metrics"
+            )
+            line = coverage_metrics.get("line")
+            branch = coverage_metrics.get("branch")
+            if (
+                not isinstance(line, dict)
+                or not isinstance(branch, dict)
+                or line.get("percent") != 90.43863972400197
+                or branch.get("percent") != 80.2593659942363
+            ):
+                errors.append("native coverage metrics differ from the documented candidate")
+        except ValueError as exc:
+            errors.append(str(exc))
+
+        try:
+            complexity_metrics = load_object(
+                evidence_root / "complexity" / "metrics.json",
+                "QF-01 native finding inventory",
+            )
+            complexity_findings = complexity_metrics.get("violations")
+            if (
+                complexity_metrics.get("functions") != 154
+                or not isinstance(complexity_findings, list)
+                or len(complexity_findings) != 15
+                or not all(isinstance(item, dict) for item in complexity_findings)
+                or max(
+                    item.get("cyclomatic_complexity", -1)
+                    for item in complexity_findings
+                )
+                != 37
+                or max(item.get("function_length", -1) for item in complexity_findings)
+                != 230
+            ):
+                errors.append("QF-01 native finding inventory differs")
+        except (TypeError, ValueError) as exc:
+            errors.append(f"QF-01 native finding inventory differs: {exc}")
+
+        try:
+            static_metrics = load_object(
+                evidence_root / "static-analysis" / "findings.json",
+                "QF-02 native finding inventory",
+            )
+            static_findings = static_metrics.get("blocking_findings")
+            if not isinstance(static_findings, list) or len(static_findings) != 17:
+                errors.append("QF-02 native finding inventory differs")
+        except ValueError as exc:
+            errors.append(str(exc))
 
     required_failures = policy.get("required_framework_failures")
     actual_failures = framework.get("failures")

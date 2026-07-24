@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "tools" / "verify_candidate_integration.py"
 POLICY = ROOT / "assurance" / "candidate-integration-policy.json"
+GSN = ROOT / "_static" / "gsn_safety_case.puml"
 
 
 def write_json(path: Path, value: object) -> None:
@@ -18,6 +19,9 @@ def write_json(path: Path, value: object) -> None:
 def candidate_fixture(
     tmp_path: Path,
     traceability_violations: list[str] | None = None,
+    coverage_percent: float = 90.43863972400197,
+    complexity_count: int = 15,
+    static_finding_count: int = 17,
 ) -> tuple[Path, Path, Path]:
     evidence = tmp_path / "_build" / "evidence"
     expected_results = {
@@ -34,6 +38,30 @@ def candidate_fixture(
         if message:
             payload["message"] = message
         write_json(evidence / activity / "result.json", payload)
+    write_json(
+        evidence / "coverage" / "metrics.json",
+        {
+            "line": {"percent": coverage_percent},
+            "branch": {"percent": 80.2593659942363},
+        },
+    )
+    write_json(
+        evidence / "complexity" / "metrics.json",
+        {
+            "functions": 154,
+            "violations": [
+                {"cyclomatic_complexity": 37, "function_length": 230},
+                *(
+                    {"cyclomatic_complexity": 16, "function_length": 101}
+                    for _ in range(complexity_count - 1)
+                ),
+            ],
+        },
+    )
+    write_json(
+        evidence / "static-analysis" / "findings.json",
+        {"blocking_findings": [{"id": index} for index in range(static_finding_count)]},
+    )
 
     framework_failures = [
         "activity complexity: finding QF-01 is undispositioned (open)",
@@ -120,8 +148,17 @@ def invoke(
     tmp_path: Path,
     policy_value: dict[str, object],
     traceability_violations: list[str] | None = None,
+    coverage_percent: float = 90.43863972400197,
+    complexity_count: int = 15,
+    static_finding_count: int = 17,
 ) -> subprocess.CompletedProcess[str]:
-    _, framework, trace = candidate_fixture(tmp_path, traceability_violations)
+    _, framework, trace = candidate_fixture(
+        tmp_path,
+        traceability_violations,
+        coverage_percent,
+        complexity_count,
+        static_finding_count,
+    )
     policy_path = tmp_path / "policy.json"
     write_json(policy_path, policy_value)
     return subprocess.run(
@@ -172,6 +209,16 @@ def test_ci_requires_exact_documented_block_before_passing() -> None:
     assert "assurance/candidate-integration-policy.json" in workflow
 
 
+def test_shipped_gsn_does_not_claim_the_blocked_proposition() -> None:
+    gsn = GSN.read_text()
+    assert "QUALIFICATION AND PUBLICATION: BLOCK" in gsn
+    assert "sufficiently safe" not in gsn
+    assert "All safety requirements are verified" not in gsn
+    assert "does not invoke undefined behavior for any" not in gsn
+    assert "free from memory errors" not in gsn
+    assert "correctly parses all valid JSON" not in gsn
+
+
 def test_documented_blocked_candidate_is_accepted_for_integration(tmp_path: Path) -> None:
     result = invoke(tmp_path, policy())
     assert result.returncode == 0, result.stdout
@@ -196,3 +243,30 @@ def test_deviation_cannot_be_promoted_to_qualification_acceptance(tmp_path: Path
     result = invoke(tmp_path, value)
     assert result.returncode == 1
     assert "QF-01 deviation is not limited to candidate integration" in result.stdout
+
+
+def test_unexpected_native_activity_is_rejected(tmp_path: Path) -> None:
+    candidate_fixture(tmp_path)
+    write_json(
+        tmp_path / "_build" / "evidence" / "unexpected" / "result.json",
+        {"activity": "unexpected", "result": "passed"},
+    )
+    result = invoke(tmp_path, policy())
+    assert result.returncode == 1
+    assert "native activity inventory differs" in result.stdout
+
+
+def test_changed_native_coverage_metrics_are_rejected(tmp_path: Path) -> None:
+    result = invoke(tmp_path, policy(), coverage_percent=100.0)
+    assert result.returncode == 1
+    assert "native coverage metrics differ" in result.stdout
+
+
+def test_changed_qf_finding_inventories_are_rejected(tmp_path: Path) -> None:
+    complexity = invoke(tmp_path, policy(), complexity_count=14)
+    assert complexity.returncode == 1
+    assert "QF-01 native finding inventory differs" in complexity.stdout
+
+    static_analysis = invoke(tmp_path, policy(), static_finding_count=16)
+    assert static_analysis.returncode == 1
+    assert "QF-02 native finding inventory differs" in static_analysis.stdout
