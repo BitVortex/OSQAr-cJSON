@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 import os
 import shutil
@@ -32,13 +33,16 @@ def copy_repository(tmp_path: Path) -> Path:
 
 
 def invoke(repository: Path, command: str) -> subprocess.CompletedProcess[str]:
+    manifest = json.loads(
+        (repository / "assurance" / "component-source-manifest.json").read_text()
+    )
     return subprocess.run(
         [
             sys.executable,
             str(repository / "tools" / "qualification.py"),
             command,
             "--source-revision",
-            "fault-seed",
+            manifest["revision"],
         ],
         cwd=repository,
         text=True,
@@ -46,6 +50,28 @@ def invoke(repository: Path, command: str) -> subprocess.CompletedProcess[str]:
         stderr=subprocess.STDOUT,
         check=False,
         timeout=120,
+    )
+
+
+def rebaseline_fault_seed(repository: Path) -> None:
+    """Create a self-consistent synthetic baseline only inside a disposable test copy."""
+    manifest_path = repository / "assurance" / "component-source-manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["revision"] = "f" * 40
+    manifest["files"] = {
+        relative: hashlib.sha256(path.read_bytes()).hexdigest()
+        for relative in manifest["files"]
+        if (path := repository / "cjson-source" / relative).is_file()
+    }
+    canonical = json.dumps(
+        manifest, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+    )
+    manifest_sha256 = hashlib.sha256(canonical.encode()).hexdigest()
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+    runner_path = repository / "tools" / "qualification.py"
+    runner = runner_path.read_text()
+    runner_path.write_text(
+        runner.replace(qualification.COMPONENT_MANIFEST_SHA256, manifest_sha256, 1)
     )
 
 
@@ -99,6 +125,15 @@ def test_explicit_source_revision_must_match_gitlink() -> None:
         qualification.Runner(ROOT, "0" * 40, os.environ.get("CC", "gcc"))
 
 
+def test_modified_component_is_rejected_without_git_metadata(tmp_path: Path) -> None:
+    repository = copy_repository(tmp_path)
+    source = repository / "cjson-source" / "cJSON.c"
+    source.write_bytes(source.read_bytes() + b"\n/* forged export */\n")
+    result = invoke(repository, "warnings")
+    assert result.returncode != 0
+    assert "does not match pinned revision: cJSON.c" in result.stdout
+
+
 def test_forced_unity_failure_fails_closed_in_temp_copy(tmp_path: Path) -> None:
     repository = copy_repository(tmp_path)
     source = repository / "cjson-source" / "tests" / "parse_hex4.c"
@@ -109,6 +144,7 @@ def test_forced_unity_failure_fails_closed_in_temp_copy(tmp_path: Path) -> None:
         text.replace(marker, marker + '\n    TEST_FAIL_MESSAGE("forced fault");', 1),
         encoding="utf-8",
     )
+    rebaseline_fault_seed(repository)
     result = invoke(repository, "test")
     assert result.returncode != 0
     evidence = repository / "_build" / "evidence" / "test"
@@ -126,6 +162,7 @@ def test_abort_signal_is_detected_in_temp_copy(tmp_path: Path) -> None:
         text.replace(marker, marker + "\n    abort();", 1),
         encoding="utf-8",
     )
+    rebaseline_fault_seed(repository)
     result = invoke(repository, "test")
     assert result.returncode != 0
     assert "terminated by signal SIGABRT" in result.stdout
@@ -147,6 +184,7 @@ def test_missing_expected_input_fails_in_temp_copy(
         shutil.rmtree(target)
     else:
         target.unlink()
+    rebaseline_fault_seed(repository)
     result = invoke(repository, "test")
     assert result.returncode != 0
     assert expected in result.stdout
@@ -154,7 +192,11 @@ def test_missing_expected_input_fails_in_temp_copy(
 
 def test_missing_expected_executable_is_rejected_in_temp_copy(tmp_path: Path) -> None:
     repository = copy_repository(tmp_path)
-    runner = qualification.Runner(repository, "fault-seed", os.environ.get("CC", "gcc"))
+    runner = qualification.Runner(
+        repository,
+        "c859b25da02955fef659d658b8f324b5cde87be3",
+        os.environ.get("CC", "gcc"),
+    )
     runner.evidence_dir("test")
     build, objects = runner.compile_objects("test", ["-O2"])
     runner.build_tests("test", ["-O2"], objects)
@@ -178,6 +220,7 @@ def test_sanitizer_detects_injected_component_memory_fault(tmp_path: Path) -> No
         + "\n    free((void*)qualification_fault);"
     )
     source.write_text(text.replace(marker, injected, 1), encoding="utf-8")
+    rebaseline_fault_seed(repository)
     result = invoke(repository, "sanitizer")
     assert result.returncode != 0
     logs = repository / "_build" / "evidence" / "sanitizer" / "logs"

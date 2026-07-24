@@ -20,6 +20,8 @@ from pathlib import Path
 from typing import Sequence
 
 MIN_PYTHON = (3, 11)
+COMPONENT_MANIFEST = Path("assurance/component-source-manifest.json")
+COMPONENT_MANIFEST_SHA256 = "df3f33d816e673610406cc98d85fbffc206eaf4c490525eec1a0cdaec7c91e03"
 EXPECTED_TESTS = (
     "parse_examples", "parse_number", "parse_hex4", "parse_string",
     "parse_array", "parse_object", "parse_value", "print_string",
@@ -44,6 +46,8 @@ WARNING_FLAGS = (
 CONFIGURATION = {
     "schema": 1,
     "language": "c99",
+    "component_manifest": str(COMPONENT_MANIFEST),
+    "component_manifest_sha256": COMPONENT_MANIFEST_SHA256,
     "component_sources": list(COMPONENT_SOURCES),
     "test_executables": list(EXPECTED_TESTS),
     "expected_cases": EXPECTED_CASES,
@@ -182,20 +186,62 @@ class Runner:
         self.evidence_root = self.root / "_build" / "evidence"
         self.cc = cc
         self.ar = os.environ.get("AR", "ar")
+        manifest_revision = self.verify_component_manifest()
         expected_revision = self.gitlink_revision()
+        if expected_revision and expected_revision != manifest_revision:
+            raise QualificationError(
+                "cjson-source gitlink does not match the pinned component manifest"
+            )
         if source_revision is None:
-            self.source_revision = expected_revision
+            self.source_revision = expected_revision or manifest_revision
         else:
             self.source_revision = source_revision.strip().lower()
-            if expected_revision and self.source_revision != expected_revision:
+            if self.source_revision != manifest_revision:
                 raise QualificationError(
-                    "--source-revision does not match the cjson-source gitlink"
+                    "--source-revision does not match the pinned component manifest"
                 )
         self.history: list[dict[str, object]] = []
         self.artifacts: list[Path] = []
         self.tool_versions: dict[str, str] = {
             "python": sys.version.splitlines()[0],
         }
+
+    def verify_component_manifest(self) -> str:
+        manifest_path = self.root / COMPONENT_MANIFEST
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise QualificationError(f"cannot read component source manifest: {exc}") from exc
+        digest = hashlib.sha256(canonical_json(manifest).encode()).hexdigest()
+        if digest != COMPONENT_MANIFEST_SHA256:
+            raise QualificationError("component source manifest does not match its pinned SHA-256")
+        if not isinstance(manifest, dict) or manifest.get("schema") != 1:
+            raise QualificationError("component source manifest schema is invalid")
+        revision = manifest.get("revision")
+        files = manifest.get("files")
+        if (
+            not isinstance(revision, str)
+            or len(revision) != 40
+            or any(character not in "0123456789abcdef" for character in revision)
+            or not isinstance(files, dict)
+            or not files
+        ):
+            raise QualificationError("component source manifest identity is invalid")
+        for relative, expected_sha256 in sorted(files.items()):
+            if not isinstance(relative, str) or not isinstance(expected_sha256, str):
+                raise QualificationError("component source manifest entry is invalid")
+            relative_path = Path(relative)
+            if relative_path.is_absolute() or ".." in relative_path.parts:
+                raise QualificationError("component source manifest path is unsafe")
+            path = self.source / relative_path
+            if not path.is_file():
+                raise QualificationError(f"component source manifest file is missing: {relative}")
+            actual_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
+            if actual_sha256 != expected_sha256:
+                raise QualificationError(
+                    f"component source file does not match pinned revision: {relative}"
+                )
+        return revision
 
     def gitlink_revision(self) -> str:
         if not (self.root / ".git").exists():
@@ -723,6 +769,7 @@ class Runner:
         provenance_base = {
             "schema": 1,
             "source_revision": self.source_revision,
+            "component_manifest_sha256": COMPONENT_MANIFEST_SHA256,
             "configuration_sha256": configuration_sha256(),
             "configuration": CONFIGURATION,
             "tool_versions": dict(sorted(self.tool_versions.items())),

@@ -69,7 +69,7 @@ release process may promote them. Authored prose cannot self-approve evidence.
    :acceptance_activity: test-suite
    :evidenced_by: EVID_UNIT
 
-.. evidence:: Generated ``_build/evidence/test_results.xml`` and paired
+.. evidence:: Generated ``_build/evidence/test/result.junit.xml`` and paired
              provenance JSON.
    :id: EVID_UNIT
    :status: blocked

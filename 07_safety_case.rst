@@ -39,8 +39,9 @@ identity:
 Why the current decision is BLOCK
 ---------------------------------
 
-The technical activities have not yet been regenerated for this revision, and
-all candidate result/evidence nodes remain unapproved. More importantly, the
+The technical activities were regenerated for this revision, but complexity
+and static-analysis findings remain open and all candidate result/evidence
+nodes remain unapproved. More importantly, the
 controlled gaps for development-process evidence, intended-use validity,
 coverage adequacy, anomaly disposition, tool confidence, and independent
 qualification verification are open. Automated test success cannot close these

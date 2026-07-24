@@ -19,7 +19,7 @@ The current candidate run passed the following mechanical gates:
 - strong C99 compiler warning audit with `-Werror`;
 - two clean deterministic builds with exact SHA-256 agreement for `cJSON.o`, `cJSON_Utils.o`, and `libcjson.a`.
 
-The generated evidence and adjacent provenance sidecars are under `_build/evidence/` and are intentionally not committed.
+The generated evidence and adjacent provenance sidecars are under `_build/evidence/` and are intentionally not committed. A pinned 229-file component-source manifest binds archive/export executions to the declared cJSON git object even when Git metadata is absent; the runner regression suite includes 14 tests, including altered-export rejection and controlled fault seeds.
 
 ## Blocking finding QF-01: complexity thresholds
 

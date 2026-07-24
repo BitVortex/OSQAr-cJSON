@@ -36,7 +36,7 @@ Initialize the submodules and execute the one-command frontend:
 .. code-block:: console
 
    git submodule update --init --recursive
-   ./build-and-test.sh all --source-revision "$(git rev-parse HEAD)"
+   ./build-and-test.sh all --source-revision "$(git rev-parse HEAD:cjson-source)"
 
 Then run OSQAr v0.10.2 framework and traceability qualification profiles with the
 same source revision and generated configuration SHA-256. A failed activity or

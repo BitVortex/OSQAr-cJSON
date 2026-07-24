@@ -42,15 +42,18 @@ jobs:
         run: ./build-and-test.sh all
 
       - name: Run runner regression and fault-seed tests
+        if: always() && !cancelled()
         run: python -m pytest -q
 
       - name: Build warning-as-error documentation
+        if: always() && !cancelled()
         run: |
           python -m sphinx -b html -W . _build/html
           test -s _build/html/index.html
           test -s _build/html/needs.json
 
       - name: Validate qualification evidence profile
+        if: always() && !cancelled()
         run: |
           SOURCE_REVISION="$(git rev-parse HEAD:cjson-source)"
           CONFIGURATION_SHA256="$(python -c 'import runpy; print(runpy.run_path("tools/qualification.py")["configuration_sha256"]())')"
@@ -62,6 +65,7 @@ jobs:
             --report-json _build/evidence/framework-validation.json
 
       - name: Validate directed qualification traceability
+        if: always() && !cancelled()
         run: |
           SOURCE_REVISION="$(git rev-parse HEAD:cjson-source)"
           CONFIGURATION_SHA256="$(python -c 'import runpy; print(runpy.run_path("tools/qualification.py")["configuration_sha256"]())')"
