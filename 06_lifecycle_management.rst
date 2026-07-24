@@ -1,177 +1,162 @@
-Lifecycle Management — cJSON Qualification
-===========================================
+Lifecycle, assumptions of use, and qualification gaps
+=====================================================
 
-.. need:: SEooC Qualification Lifecycle — ISO 26262-10:2018 Clause 6
-   :id: LM_LIFECYCLE
-   :status: active
-   :tags: lifecycle
+Assumptions-of-use protocol
+---------------------------
 
-   The cJSON SEooC qualification lifecycle follows ISO 26262-10:2018 Clause 6
-   (SEooC development). The lifecycle encompasses four phases:
+For each AoU below the integrator shall record: applicability; item/element and
+allocated safety requirements; objective evidence; reviewer and independence;
+PASS/BLOCK decision; source revision; component configuration; target
+compiler/platform; and the release-manifest digest. ``Not applicable`` requires
+a rationale and reviewer. Missing evidence or an unresolved decision is BLOCK.
 
-   1. Assumption of Use definition
-   2. Safety Requirements derivation from assumptions
-   3. Verification and Validation against requirements
-   4. Integration validation in target context
-
-Assumptions of Use (AoU)
--------------------------
-
-.. need:: AoU-1 (Integration Context): cJSON is integrated as a stateless library in an ASIL D ECU context. All state is caller-owned (cJSON* pointers). The integrator provides a qualified memory allocator via cJSON_InitHooks.
-   :id: LM_AOU_CONTEXT
-   :status: active
-   :tags: lifecycle;aou;ASIL_D
-   :links: SC_CJSON_SAFE
-
-.. need:: AoU-2 (Input Constraints): JSON inputs processed through cJSON shall not exceed CJSON_NESTING_LIMIT (1000) depth. Maximum single string length is bounded by available memory. Inputs originate from a trusted or integrity-checked source (validated at system level before reaching cJSON).
+.. lifecycle:: Inputs are bounded, available for the full call, and subject to
+              item-specific size/depth/resource limits. The integrator verifies
+              malformed, truncated, deeply nested, and overload behavior against
+              its allocated safety requirements.
    :id: LM_AOU_INPUTS
+   :kind: assumption
    :status: active
-   :tags: lifecycle;aou;ASIL_D
-   :links: SC_CJSON_SAFE
+   :owner: integrator
+   :gate_effect: block
+   :constrains: REQ_PARSE_VALID, REQ_INPUT_FAILURE, VER_UNIT, VER_SANITIZER, VER_COVERAGE
 
-.. need:: AoU-3 (Threading Model): cJSON is not thread-safe and shall be used from a single thread of control or externally synchronized by the integrator.
-   :id: LM_AOU_THREADING
+.. lifecycle:: Mutable trees are owned by one execution context or externally
+              synchronized. The global parse-error pointer is not used as a
+              cross-thread diagnostic interface. The integrator verifies its
+              publication and lifetime model.
+   :id: LM_AOU_CONCURRENCY
+   :kind: assumption
    :status: active
-   :tags: lifecycle;aou;ASIL_D
-   :links: SC_CJSON_SAFE
+   :owner: integrator
+   :gate_effect: block
+   :constrains: REQ_CONCURRENCY_BOUNDARY, ARCH_ERROR_CONTRACT, ARCH_MEMORY, VER_STATIC
 
-.. need:: AoU-4 (Error Handling): The integrator shall check all cJSON return values for error indicators (NULL from parse/create functions, cJSON_False from boolean returns). Unchecked error paths are the integrator's responsibility.
-   :id: LM_AOU_ERROR
+.. lifecycle:: Custom allocation hooks, if used, form a compatible allocation
+              family for the complete component lifetime and meet item-specific
+              failure, determinism, alignment, and concurrency requirements.
+   :id: LM_AOU_ALLOCATOR
+   :kind: assumption
    :status: active
-   :tags: lifecycle;aou;ASIL_D
-   :links: SC_CJSON_SAFE
+   :owner: integrator
+   :gate_effect: block
+   :constrains: REQ_MEMORY_OWNERSHIP, ARCH_MEMORY, VER_SANITIZER
 
-.. need:: AoU-5 (Toolchain): The integrator shall reproduce the qualification build with the audited toolchain version and compiler flags. Binary equivalence or semantic equivalence shall be demonstrated.
+.. lifecycle:: The production compiler, C library, ABI, options, definitions,
+              locale behavior, and target hardware are identified. Differences
+              from the reference qualification environment are impact-analysed
+              and applicable verification is repeated.
    :id: LM_AOU_TOOLCHAIN
+   :kind: assumption
    :status: active
-   :tags: lifecycle;aou;ASIL_D
-   :links: SC_CJSON_SAFE
+   :owner: integrator
+   :gate_effect: block
+   :constrains: REQ_BUILD_DIAGNOSTICS, REQ_REPRODUCIBLE_BUILD, ARCH_BUILD_BOUNDARY, VER_WARNINGS, VER_REPRODUCIBLE
 
-Configuration Management
--------------------------
-
-.. need:: The cJSON SEooC qualification baseline is v1.7.19 (identified by git tag and SHA256 of the source archive). All artifacts (requirements, architecture, verification reports, builds) are version-controlled under the OSQAr project.
-   :id: LM_CM_BASELINE
+.. lifecycle:: Item-specific execution-time, stack, heap, recursion-depth, and
+              availability budgets are established and verified using the real
+              input distribution and target environment; this repository does
+              not provide those budgets.
+   :id: LM_AOU_RESOURCES
+   :kind: assumption
    :status: active
-   :tags: lifecycle;cm
+   :owner: integrator
+   :gate_effect: block
+   :constrains: REQ_INPUT_FAILURE, ARCH_PARSER, ARCH_PRINTER, VER_COVERAGE
 
-Issue Management
------------------
-
-.. need:: All deviations from requirements, static analysis false positives, and coverage gaps shall be documented as issue records with safety justifications, reviewer sign-off, and traceability to affected requirements.
-   :id: LM_ISSUES
+.. lifecycle:: Only the identified ``cJSON.c``/``cJSON.h`` source and in-scope
+              API classes are relied upon. Utilities, locale-enabled behavior,
+              packaging, and modified source require a new or extended
+              qualification specification and impact analysis.
+   :id: LM_AOU_SCOPE
+   :kind: assumption
    :status: active
-   :tags: lifecycle;issues
+   :owner: integrator
+   :gate_effect: block
+   :constrains: REQ_COMPONENT_IDENTITY, ARCH_BUILD_BOUNDARY, VER_REPRODUCIBLE
 
-Shipment Content
------------------
+Change and baseline control
+---------------------------
 
-The qualification shipment contains:
+Every change to the source gitlink, runner, qualification policy, requirement,
+AoU, accepted deviation, tool version, or generated shipment invalidates the
+previous configuration identity. The evidence workflow shall then be rerun and
+the new exact tree independently reviewed. The upstream issue/anomaly state is
+reviewed at each release rather than copied forward as static prose.
 
-1. Requirements document (this project)
-2. Architecture document with PlantUML diagrams
-3. Verification plan and results
-4. Implementation description and source inventory
-5. Test suite and execution report (JUnit XML)
-6. Static analysis report
-7. Code coverage report
-8. Complexity analysis report
-9. Sanitizer / Valgrind execution logs
-10. Fuzzing campaign summary (if executed)
-11. Compiler warning audit
-12. SHA256SUMS manifest for integrity verification
+Tool-confidence boundary
+------------------------
 
-Tool Confidence Level (TCL) Assessment
---------------------------------------
+The compiler, linker, Python runtime, Unity, sanitizers, gcovr, lizard,
+cppcheck, Sphinx/Sphinx-Needs, OSQAr, archive tools, and cryptographic digest
+implementation can introduce or fail to detect errors. This repository records
+versions and applies diverse checks (process status, parsers, schema checks,
+counter reconciliation, fault seeds, clean rebuilds, and exact-inventory
+verification). These controls are detection evidence; they are not, by
+themselves, an ISO 26262-8:2018 Clause 11 tool qualification or a justified TCL
+determination for an integrator's use.
 
-Per ISO 26262-8:2018 §11.4 (Software tool qualification), each tool used
-in the qualification process is classified by Tool Impact (TI) and Tool
-Error Detection (TD) to determine the required Tool Confidence Level (TCL).
+Controlled Clause 12 gap register
+---------------------------------
 
-.. list-table:: Tool Qualification Assessment
-   :header-rows: 1
+.. lifecycle:: Evidence that the upstream component development process is
+              based on an appropriate national or international standard has
+              not been established for this baseline.
+   :id: LM_GAP_DEVELOPMENT_PROCESS
+   :kind: gap
+   :status: open
+   :owner: component-qualification-manager
+   :gate_effect: block
 
-   * - Tool
-     - Version
-     - Purpose
-     - TI
-     - TD
-     - TCL
-     - Qualification Method
-   * - gcc
-     - 11.4.0 (Ubuntu 22.04)
-     - Compiler, linker
-     - TI2
-     - TD3
-     - TCL3
-     - Increased confidence from use (10⁹+ field hours)
-   * - gcov / lcov
-     - 1.16
-     - Code coverage measurement
-     - TI1
-     - TD1
-     - TCL1
-     - No qualification required
-   * - cppcheck
-     - 2.14.0
-     - Static analysis
-     - TI1
-     - TD2
-     - TCL2
-     - Tool validation against known defect corpus
-   * - lizard
-     - 1.17.10
-     - Cyclomatic complexity
-     - TI1
-     - TD1
-     - TCL1
-     - No qualification required
-   * - Valgrind/Memcheck
-     - 3.22.0
-     - Dynamic memory analysis
-     - TI1
-     - TD1
-     - TCL1
-     - No qualification required
-   * - ASan / UBSan
-     - (compiler-builtin)
-     - Runtime sanitizers
-     - TI1
-     - TD1
-     - TCL1
-     - No qualification required
-   * - plantuml
-     - 1.2024.6
-     - Diagram generation
-     - TI1
-     - TD1
-     - TCL1
-     - No qualification required
-   * - Sphinx
-     - ≥7.4
-     - Documentation generation
-     - TI1
-     - TD2
-     - TCL2
-     - Tool validation (CI regression suite)
-   * - Unity (test framework)
-     - (bundled v2.5.2)
-     - Unit test harness
-     - TI1
-     - TD1
-     - TCL1
-     - No qualification required
+.. lifecycle:: Item-independent tests cannot establish suitability for a
+              specific intended use. The AoU protocol requires item/integration
+              evidence and an independent validity review.
+   :id: LM_GAP_INTENDED_USE
+   :kind: gap
+   :status: open
+   :owner: integrator
+   :gate_effect: block
 
-.. need:: Tool Confidence Level Assessment — ISO 26262-8:2018 §11.4
-   :id: LM_TOOL_TCL
-   :status: active
-   :tags: lifecycle;tool-qualification;ASIL_D
-   :links: REQ_CJSON_TRACEABILITY
+.. lifecycle:: Structural coverage in the reference environment does not by
+              itself establish completeness for ASIL D requirements or the
+              target production environment. Uncovered code and derived test
+              adequacy require reviewed disposition.
+   :id: LM_GAP_COVERAGE_ADEQUACY
+   :kind: gap
+   :status: open
+   :owner: verification-manager
+   :gate_effect: block
 
-   The compiler (gcc) is classified TCL3 (TI2 + TD3) due to its potential
-   to introduce errors into the safety-related software. The qualification
-   argument relies on increased confidence from use across 10⁹+ field
-   hours in automotive and safety-critical contexts. All verification
-   tools are TCL1 or TCL2, requiring no formal qualification beyond
-   documented validation. A TCL3 qualification report for the compiler
-   is deferred to a future qualification cycle.
+.. lifecycle:: Upstream known anomalies and live analysis findings require
+              safety-impact classification, disposition, and regression linkage
+              for the intended use.
+   :id: LM_GAP_ANOMALIES
+   :kind: gap
+   :status: open
+   :owner: component-qualification-manager
+   :gate_effect: block
+
+.. lifecycle:: Tool-confidence evaluations for the actual qualification and
+              production tool uses have not received independent acceptance.
+   :id: LM_GAP_TOOL_CONFIDENCE
+   :kind: gap
+   :status: open
+   :owner: tool-qualification-manager
+   :gate_effect: block
+
+.. lifecycle:: ISO 26262-8:2018, 12.4.3 verification of the qualification result
+              and its intended-use validity has not been completed by an
+              independent reviewer for an immutable release tree.
+   :id: LM_GAP_INDEPENDENT_VERIFICATION
+   :kind: gap
+   :status: open
+   :owner: independent-functional-safety-reviewer
+   :gate_effect: block
+
+Release rule
+------------
+
+Any open gap with ``gate_effect=block``, failed qualification-profile activity,
+manifest mismatch, or independent BLOCK decision prevents publication or use of
+the archive as a qualified software component package. A blocked archive may be
+retained only as a clearly labeled research/review candidate.

@@ -1,74 +1,150 @@
-Requirements — cJSON Qualification (ISO 26262 ASIL D SEooC)
-=============================================================
+Software component qualification specification
+==============================================
 
-.. need:: The cJSON parser shall accept all valid JSON texts as defined by RFC 8259 and reject all malformed inputs with a deterministic error state.
-   :id: REQ_CJSON_PARSE_VALID
-   :status: active
-   :tags: safety;parsing;seooc;ASIL_D
-   :links: ARCH_PARSER_FLOW
+Purpose and claim boundary
+--------------------------
 
-.. need:: The cJSON printer shall produce valid JSON text conforming to RFC 8259 for any valid in-memory cJSON object graph.
-   :id: REQ_CJSON_PRINT_VALID
-   :status: active
-   :tags: safety;printing;seooc;ASIL_D
-   :links: ARCH_PRINTER_FLOW
+This repository records a **bounded qualification attempt** for reuse of the
+identified cJSON component. It is not a certification, compliance statement, or
+claim that cJSON is qualified for an automotive item. An integrator remains
+responsible for item-specific safety analysis, allocation, integration,
+verification, tool confidence, and acceptance of every assumption of use.
 
-.. need:: All memory allocations shall be checked for failure. Any failed allocation shall result in a deterministic error return (NULL) without undefined behavior.
-   :id: REQ_CJSON_MEMORY_SAFE
-   :status: active
-   :tags: safety;memory;seooc;ASIL_D
-   :links: ARCH_MEMORY_MODEL
+The process framing is ISO 26262-8:2018, Clause 12 (qualification of software
+components). Unit and integration verification techniques from ISO
+26262-6:2018, Clauses 9 and 10 support the evidence but do not replace the Part
+8 Clause 12 intended-use and qualification-verification obligations.
 
-.. need:: The library shall not invoke undefined behavior for any input, including malformed JSON, integer overflow in depth/buffer-size parameters, and NULL pointer arguments.
-   :id: REQ_CJSON_NO_UB
-   :status: active
-   :tags: safety;robustness;seooc;ASIL_D
-   :links: ARCH_PARSER_FLOW;VER_CJSON_SANITIZERS;VER_CJSON_FUZZING
+Identified component and configuration
+--------------------------------------
 
-.. need:: cJSON shall operate with bounded stack usage. Recursive descent parsing shall be depth-limited to prevent stack overflow.
-   :id: REQ_CJSON_STACK_BOUNDED
-   :status: active
-   :tags: safety;stack;seooc;ASIL_D
-   :links: VER_CJSON_STACK;ARCH_PARSER_FLOW;ARCH_FFI_MEASURES
+**Component identity:** upstream cJSON tag ``v1.7.19`` at git object
+``c859b25d3b25fe44d3c99dc56dce35bdd55a8a8f``.
 
-.. need:: All integer arithmetic in parsing and printing shall be free of signed overflow, wraparound, and truncation that could produce incorrect JSON values.
-   :id: REQ_CJSON_ARITH_SAFE
-   :status: active
-   :tags: safety;integer;seooc;ASIL_D
-   :links: VER_CJSON_ARITH;ARCH_PRINTER_FLOW
+**In-scope implementation:** ``cjson-source/cJSON.c`` and
+``cjson-source/cJSON.h`` with ``ENABLE_LOCALES`` not defined and the default
+allocator hooks unless the integrator verifies a replacement allocator.
 
-.. need:: The cJSON API functions shall validate their input pointer parameters before dereference. NULL pointers passed as cJSON* arguments shall produce deterministic error returns.
-   :id: REQ_CJSON_NULL_PTR_SAFE
-   :status: active
-   :tags: safety;api;seooc;ASIL_D
-   :links: VER_CJSON_API;ARCH_MODULE_BOUNDARY
+**In-scope API classes:** parsing, printing, tree construction/access,
+deallocation, duplication/comparison, minification, allocator hooks, and error
+pointer access declared by ``cJSON.h``.
 
-.. need:: cJSON_Utils functions (JSON Patch RFC 6902, JSON Pointer RFC 6901) shall produce correct outputs conforming to their respective RFCs and reject malformed patch/pointer inputs.
-   :id: REQ_CJSON_UTILS_RFC
-   :status: active
-   :tags: safety;rfc;seooc;ASIL_D
-   :links: VER_CJSON_UTILS;ARCH_DATA_MODEL;ARCH_MODULE_BOUNDARY
+**Explicitly outside the qualification claim:** ``cJSON_Utils.c`` and
+``cJSON_Utils.h``; CMake/package integration; platform-specific shared-library
+loading; locale-enabled number conversion; custom allocator behavior;
+concurrent use of mutable trees; and any item-specific timing, stack, or memory
+budget. The utilities are still built and exercised as regression context so
+that their presence cannot silently corrupt the in-scope library build.
 
-.. need:: String handling in cJSON shall be safe against buffer overruns. All string operations shall respect buffer boundaries and produce NUL-terminated results.
-   :id: REQ_CJSON_STRING_SAFE
-   :status: active
-   :tags: safety;string;seooc;ASIL_D
-   :links: VER_CJSON_STRING;ARCH_DATA_MODEL;ARCH_PARSER_FLOW
+**Maximum target:** ASIL D verification rigor is targeted. This label is a
+verification target only; it is not an ASIL allocation or qualification result.
 
-.. need:: cJSON shall not contain unreachable dead code, unused variables, or logical contradictions that could indicate dormant defects.
-   :id: REQ_CJSON_CODE_QUALITY
-   :status: active
-   :tags: safety;quality;seooc;ASIL_D
-   :links: VER_CJSON_STATIC;ARCH_MODULE_BOUNDARY;ARCH_DATA_MODEL
+Component requirements
+----------------------
 
-.. need:: The cJSON build system shall be reproducible. A build from source on the qualified toolchain version shall produce bit-identical or semantically equivalent binaries.
-   :id: REQ_CJSON_REPRODUCIBLE
+.. req:: The delivered component and evidence shall identify the exact upstream
+         source object, in-scope files, build configuration, and qualification
+         configuration hash.
+   :id: REQ_COMPONENT_IDENTITY
    :status: active
-   :tags: safety;build;seooc;ASIL_D
-   :links: VER_CJSON_REPRODUCIBLE;ARCH_MODULE_BOUNDARY
+   :allocated_to: ARCH_BUILD_BOUNDARY
+   :allocated_to_api: IMPL_CORE_SOURCE
+   :verified_by: VER_REPRODUCIBLE
 
-.. need:: All safety requirements shall be traceable to verification activities, and all verification activities shall produce documentation artifacts suitable for ISO 26262-8:2018 Clause 9 (Verification) audit.
-   :id: REQ_CJSON_TRACEABILITY
+.. req:: For a valid, bounded JSON input and sufficient resources, the parsing
+         APIs shall return a tree representing the accepted input without
+         reading outside the supplied buffer.
+   :id: REQ_PARSE_VALID
    :status: active
-   :tags: safety;process;seooc;ASIL_D
-   :links: ARCH_MODULE_BOUNDARY
+   :allocated_to: ARCH_PARSER
+   :allocated_to_api: IMPL_PARSE_API
+   :verified_by: VER_UNIT, VER_SANITIZER
+
+.. req:: For an in-scope cJSON tree and sufficient resources, the printing APIs
+         shall emit a syntactically valid representation or report allocation
+         failure through their documented return value.
+   :id: REQ_PRINT_VALID
+   :status: active
+   :allocated_to: ARCH_PRINTER
+   :allocated_to_api: IMPL_PRINT_API
+   :verified_by: VER_UNIT, VER_SANITIZER
+
+.. req:: Invalid, truncated, deeply nested, or unsupported input shall produce
+         a documented failure result without undefined behavior in the
+         exercised qualification configuration.
+   :id: REQ_INPUT_FAILURE
+   :status: active
+   :allocated_to: ARCH_ERROR_CONTRACT
+   :allocated_to_api: IMPL_PARSE_API, IMPL_DIAGNOSTIC_API
+   :verified_by: VER_UNIT, VER_SANITIZER
+
+.. req:: Component-owned dynamic memory shall be allocated and released through
+         one compatible allocator family, and deletion shall release the full
+         owned subtree without double free in the exercised configuration.
+   :id: REQ_MEMORY_OWNERSHIP
+   :status: active
+   :allocated_to: ARCH_MEMORY
+   :allocated_to_api: IMPL_MEMORY_API
+   :verified_by: VER_UNIT, VER_SANITIZER
+
+.. req:: Size and numeric conversions exercised by the bounded test suite shall
+         not wrap into an unsafe allocation or cause undefined behavior.
+   :id: REQ_NUMERIC_SAFETY
+   :status: active
+   :allocated_to: ARCH_PARSER, ARCH_PRINTER
+   :allocated_to_api: IMPL_PARSE_API, IMPL_PRINT_API
+   :verified_by: VER_UNIT, VER_SANITIZER, VER_STATIC
+
+.. req:: Mutable cJSON trees and the global error pointer shall not be accessed
+         concurrently unless the integrator supplies and verifies external
+         synchronization; read-only access after publication is permitted only
+         under the integrator's concurrency analysis.
+   :id: REQ_CONCURRENCY_BOUNDARY
+   :status: active
+   :allocated_to: ARCH_ERROR_CONTRACT, ARCH_MEMORY
+   :allocated_to_api: IMPL_DIAGNOSTIC_API, IMPL_MEMORY_API
+   :verified_by: VER_STATIC, VER_UNIT
+
+.. req:: The in-scope source shall compile as C99 with the recorded compiler
+         configuration and without compiler diagnostics promoted by the
+         qualification warning policy.
+   :id: REQ_BUILD_DIAGNOSTICS
+   :status: active
+   :allocated_to: ARCH_BUILD_BOUNDARY
+   :allocated_to_api: IMPL_CORE_SOURCE
+   :verified_by: VER_WARNINGS
+
+.. req:: The in-scope source shall be evaluated against the recorded static
+         analysis and complexity policies; every finding or threshold
+         exceedance shall be represented in a machine-readable result.
+   :id: REQ_ANALYSIS_ACCOUNTABILITY
+   :status: active
+   :allocated_to: ARCH_BUILD_BOUNDARY
+   :allocated_to_api: IMPL_CORE_SOURCE
+   :verified_by: VER_STATIC, VER_COMPLEXITY
+
+.. req:: The qualification test suite shall provide requirements-linked unit,
+         failure-condition, sanitizer, and structural-coverage evidence whose
+         counters reconcile with the executed inventory.
+   :id: REQ_VERIFICATION_EVIDENCE
+   :status: active
+   :allocated_to: ARCH_BUILD_BOUNDARY
+   :allocated_to_api: IMPL_CORE_SOURCE
+   :verified_by: VER_UNIT, VER_SANITIZER, VER_COVERAGE
+
+.. req:: Repeated clean builds with the same recorded inputs shall produce
+         byte-identical in-scope objects and static library in the qualification
+         environment.
+   :id: REQ_REPRODUCIBLE_BUILD
+   :status: active
+   :allocated_to: ARCH_BUILD_BOUNDARY
+   :allocated_to_api: IMPL_CORE_SOURCE
+   :verified_by: VER_REPRODUCIBLE
+
+Acceptance limitations
+----------------------
+
+Passing these requirements demonstrates only that the recorded activities
+completed for the identified source and configuration. Suitability for an
+intended automotive use is blocked until the Clause 12 gap register and AoU
+protocol in :doc:`06_lifecycle_management` are independently accepted.

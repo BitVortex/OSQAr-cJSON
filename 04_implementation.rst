@@ -1,79 +1,52 @@
-Implementation — cJSON Qualification
-======================================
+Implementation and build boundary
+=================================
 
-.. need:: Qualified Source Baseline — cJSON v1.7.19
-   :id: IMPL_SOURCE
-   :status: active
-   :tags: implementation;source
-   :links: REQ_CJSON_PARSE_VALID;ARCH_MODULE_BOUNDARY
+Source identity
+---------------
 
-   The qualified cJSON source is taken from the upstream release v1.7.19
-   (commit tagged in DaveGamble/cJSON). The source consists of two
-   translation units:
+The component source is an unmodified git submodule pinned to
+``c859b25d3b25fe44d3c99dc56dce35bdd55a8a8f`` (upstream cJSON ``v1.7.19``).
+The Unity test framework is pinned independently. A qualification result is
+valid only for these exact git objects and the configuration identified in its
+evidence provenance.
 
-   - **cJSON.c** (~3190 LOC): core parser, printer, and object model
-   - **cJSON_Utils.c** (~1480 LOC): JSON Patch, JSON Pointer, Sort, and
-     Merge utilities
+The qualification claim includes ``cJSON.c`` and ``cJSON.h``. The runner also
+compiles ``cJSON_Utils.c`` and executes its upstream tests as regression context,
+but this does not silently extend the claim to the utilities API.
 
-   Public headers: ``cJSON.h`` and ``cJSON_Utils.h``.
+One-command frontend
+--------------------
 
-.. need:: The qualified build uses a specified C99-compliant toolchain with fixed compiler version, flags, and standard library. All compiler warnings are treated as errors (-Werror) with an audited warning flag set.
-   :id: IMPL_BUILD
-   :status: active
-   :tags: implementation;build
-   :links: REQ_CJSON_REPRODUCIBLE
+From a checkout with initialized submodules:
 
-.. need:: The cJSON library is delivered as a compiled static library (libcjson.a) and shared object (libcjson.so) with exported symbol visibility restricted to the CJSON_PUBLIC API.
-   :id: IMPL_DELIVERABLE
-   :status: active
-   :tags: implementation;delivery
-   :links: ARCH_MODULE_BOUNDARY
+.. code-block:: console
 
-.. need:: Third-party dependencies: cJSON has zero external library dependencies beyond the C standard library (C99). The test suite depends on the Unity test framework (bundled in tests/unity/) and CMake build system.
-   :id: IMPL_DEPENDENCIES
-   :status: active
-   :tags: implementation;dependencies
+   ./build-and-test.sh all --source-revision "$(git rev-parse HEAD)"
 
-Source inventory
-----------------
+The shell frontend delegates to ``tools/qualification.py``. The runner creates
+a clean configuration-specific build directory, checks every subprocess return
+code, validates every generated report, and writes provenance next to evidence.
+The command is unsuccessful if a required tool is absent or any required gate
+is incomplete.
 
-.. list-table:: cJSON Source Files
-   :header-rows: 1
+Qualification configuration identity
+------------------------------------
 
-   * - File
-     - LOC
-     - Purpose
-   * - cJSON.c
-     - 3191
-     - Core parser, printer, object model
-   * - cJSON.h
-     - 306
-     - Public API declarations, type definitions
-   * - cJSON_Utils.c
-     - 1481
-     - JSON Patch, JSON Pointer, sort, merge
-   * - cJSON_Utils.h
-     - 88
-     - Utils API declarations
-   * - **Total**
-     - **5066**
-     - 
+The configuration hash is calculated from the controlled qualification policy
+and runner inputs, not from transient output paths. It covers at least source
+scope, compiler/linker flags, preprocessor definitions, test source/input
+inventory, tool policy thresholds, and evidence schema version. Tool executable
+versions and the git source revision are recorded separately in activity
+history so that environment drift is visible.
 
-Public API surface: 78 CJSON_PUBLIC functions across core + utils, covering:
+No generated evidence or archive is accepted from an earlier revision merely
+because its filename matches.
 
-- Parsing (6 functions: Parse, ParseWithLength, ParseWithOpts, ParseWithLengthOpts, ParseWithLength, Version)
-- Printing (4 functions: Print, PrintUnformatted, PrintBuffered, PrintPreallocated)
-- Object creation (13 functions: CreateNull, CreateTrue, CreateFalse, CreateBool, CreateNumber, CreateString, CreateRaw, CreateArray, CreateObject, CreateStringReference, CreateObjectReference, CreateArrayReference, CreateIntArray)
-- Item management (8 functions: AddItemToArray, AddItemToObject, AddItemReferenceToArray, AddItemReferenceToObject, InsertItemInArray, DeleteItemFromArray, DeleteItemFromObject, ReplaceItemInArray, ReplaceItemViaPointer, DetachItemFromArray, DetachItemViaPointer)
-- Accessors (20 functions: GetArraySize, GetArrayItem, GetObjectItem, GetObjectItemCaseSensitive, HasObjectItem, GetErrorPtr, GetStringValue, GetNumberValue, and type-check functions)
-- Utilities (functions for Patch, Pointer, Sort, Merge, CaseSensitive comparison via cJSON_Utils)
+Integration boundary
+--------------------
 
-Compiler warning flags for qualified build:
-
-.. code-block:: text
-
-   -Wall -Wextra -Werror -Wpedantic -Wconversion
-   -Wsign-conversion -Wdouble-promotion -Wfloat-equal
-   -Wnull-dereference -Wformat=2 -Wstrict-prototypes
-   -Wmissing-prototypes -Wdeclaration-after-statement
-   -std=c99
+The integrator shall use a compiler and C library suitable for its target,
+repeat applicable verification for that target configuration, and verify all
+AoU decisions. The Linux/GCC execution in this repository is reference evidence
+for the recorded environment; it is not evidence for another compiler, ABI,
+operating system, processor, or runtime resource budget.
