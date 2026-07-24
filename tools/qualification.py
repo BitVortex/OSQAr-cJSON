@@ -473,7 +473,7 @@ class Runner:
     def coverage(self) -> None:
         evidence = self.evidence_dir("coverage")
         gcovr = self.require_tool("gcovr")
-        flags = ["-O0", "-g", "--coverage"]
+        flags = ["-O0", "-g", "--coverage", "-fprofile-abs-path"]
         build, objects = self.compile_objects("coverage", flags)
         self.build_tests("coverage", flags, objects)
         self.execute_tests("coverage", build)
