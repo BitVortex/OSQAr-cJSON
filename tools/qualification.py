@@ -182,21 +182,34 @@ class Runner:
         self.evidence_root = self.root / "_build" / "evidence"
         self.cc = cc
         self.ar = os.environ.get("AR", "ar")
-        self.source_revision = source_revision or self.git_head()
+        expected_revision = self.gitlink_revision()
+        if source_revision is None:
+            self.source_revision = expected_revision
+        else:
+            self.source_revision = source_revision.strip().lower()
+            if expected_revision and self.source_revision != expected_revision:
+                raise QualificationError(
+                    "--source-revision does not match the cjson-source gitlink"
+                )
         self.history: list[dict[str, object]] = []
         self.artifacts: list[Path] = []
         self.tool_versions: dict[str, str] = {
             "python": sys.version.splitlines()[0],
         }
 
-    def git_head(self) -> str:
+    def gitlink_revision(self) -> str:
+        if not (self.root / ".git").exists():
+            return ""
         result = subprocess.run(
-            ["git", "-C", str(self.root), "rev-parse", "HEAD"],
+            ["git", "-C", str(self.root), "rev-parse", "HEAD:cjson-source"],
             text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
         )
         if result.returncode:
-            raise QualificationError("cannot determine current HEAD; use --source-revision")
-        return result.stdout.strip()
+            raise QualificationError("cannot determine cjson-source gitlink revision")
+        revision = result.stdout.strip().lower()
+        if len(revision) != 40 or any(character not in "0123456789abcdef" for character in revision):
+            raise QualificationError("cjson-source gitlink revision is not a 40-hex object ID")
+        return revision
 
     def require_tool(self, name: str) -> str:
         path = shutil.which(name)
@@ -320,11 +333,13 @@ class Runner:
         cc = self.require_tool(self.cc)
         build = self.build_root / mode
         unity_obj = build / "unity.o"
+        relative = lambda path: str(path.relative_to(self.root))
         self.command([
             cc, "-std=c99", *flags, "-Wno-error", "-Wno-switch-enum",
-            "-fvisibility=default", "-I", str(self.tests / "unity" / "src"),
-            "-c", str(self.tests / "unity" / "src" / "unity.c"), "-o", str(unity_obj),
-        ])
+            "-fvisibility=default", "-I", relative(self.tests / "unity" / "src"),
+            "-c", relative(self.tests / "unity" / "src" / "unity.c"),
+            "-o", relative(unity_obj),
+        ], cwd=self.root)
         for name in inventory:
             executable = build / name
             test_source = self.tests / f"{name}.c"
@@ -360,11 +375,12 @@ class Runner:
                 [component_objects[1]] if name in UTILS_TESTS else []
             )
             self.command([
-                cc, "-std=c99", *flags, "-I", str(self.source), "-I", str(self.tests),
-                str(test_source), str(self.tests / "unity_setup.c"),
-                *(str(obj) for obj in linked_components), str(unity_obj),
-                "-lm", "-o", str(executable),
-            ])
+                cc, "-std=c99", *flags,
+                "-I", relative(self.source), "-I", relative(self.tests),
+                relative(test_source), relative(self.tests / "unity_setup.c"),
+                *(relative(obj) for obj in linked_components), relative(unity_obj),
+                "-lm", "-o", relative(executable),
+            ], cwd=self.root)
         actual = tuple(sorted(
             path.name for path in build.iterdir()
             if path.is_file() and os.access(path, os.X_OK)

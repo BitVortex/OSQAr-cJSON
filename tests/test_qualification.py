@@ -94,6 +94,11 @@ def test_configured_coverage_thresholds_preserve_documented_policy() -> None:
     assert qualification.BRANCH_COVERAGE_MIN == 80.0
 
 
+def test_explicit_source_revision_must_match_gitlink() -> None:
+    with pytest.raises(qualification.QualificationError, match="does not match"):
+        qualification.Runner(ROOT, "0" * 40, os.environ.get("CC", "gcc"))
+
+
 def test_forced_unity_failure_fails_closed_in_temp_copy(tmp_path: Path) -> None:
     repository = copy_repository(tmp_path)
     source = repository / "cjson-source" / "tests" / "parse_hex4.c"

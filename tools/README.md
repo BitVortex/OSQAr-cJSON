@@ -17,9 +17,10 @@ Commands:
 ./build-and-test.sh reproducible
 ```
 
-Use `--source-revision REVISION` to record a controlled source identifier;
-otherwise the current repository `HEAD` is recorded. `CC`/`--cc` and `AR` select
-the compiler and archiver.
+Use `--source-revision REVISION` to record the controlled cJSON gitlink object;
+otherwise the runner derives `HEAD:cjson-source`. In a Git checkout, an explicit
+revision must match that gitlink. `CC`/`--cc` and `AR` select the compiler and
+archiver.
 
 Dependencies are a C99 compiler (GCC by default), `ar`, `gcovr`, `lizard`, and
 `cppcheck`. Sanitizer execution also requires compiler/runtime support for
